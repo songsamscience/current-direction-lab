@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<meta name="version" content="2.0">
+<meta name="version" content="3.1">
 <meta name="description" content="마찰 전기로 네온전구를 켜 보고, 전기 회로 속 전자의 이동 방향과 전류의 방향을 비교하는 가상실험실">
 <meta property="og:title" content="송쌤과학 가상실험실 | 전하와 전류의 이동 방향">
 <meta property="og:description" content="네온전구 · 전기 회로 속 전자 · 물 흐름 모형으로 전류와 전압을 알아보는 가상실험실">
@@ -464,7 +464,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 <script>
 'use strict';
 /* ═════════ 기본 도구 ═════════ */
-const APP_VERSION='3.0', APP_DATE='2026-09-27', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
+const APP_VERSION='3.1', APP_DATE='2026-10-03', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
 const NS='http://www.w3.org/2000/svg';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mod=(a,n)=>((a%n)+n)%n;
@@ -1377,15 +1377,15 @@ const QS=[
  {id:'q1',title:'대전된 고무풍선을 갖다 댄 알루미늄 컵에 네온전구를 대면 순간적으로 불이 켜졌다가 꺼져요. 그 까닭을 전하의 이동과 관련지어 설명해 보자.',
   mini:{kind:'neon',title:'풍선을 갖다 댄 알루미늄 컵에 네온전구 대기',guide:'‘네온전구 대기’를 눌러 보고, 떼었다가 한 번 더 대 보세요.'},
   hint:'간이 실험에서 ‘네온전구 대기’를 누른 뒤 표의 ‘전하’ 칸과 ‘손으로 빠져나간 전자’ 줄이 어떻게 바뀌는지 보세요. ‘네온전구 떼기’ 후 한 번 더 대면 어떻게 되는지도 확인해 보세요.',
-  model:'알루미늄 컵에 모여 있던 <mark>(−)전하(전자)가 네온전구를 지나 손 쪽으로 이동</mark>하면서 순간적으로 <mark>전류가 흘러</mark> 불이 켜진다. 전하가 옮겨 가면 컵과 손 사이의 <mark>전압(전위차)이 작아져</mark> 더 이상 전류가 흐르지 못하므로 불이 꺼진다. 전지처럼 <mark>전압을 계속 유지해 주는 장치가 없기</mark> 때문에 불은 잠깐만 켜진다. 컵의 전자가 모두 없어져야만 꺼지는 것은 아니다.'},
+  model:'알루미늄 컵에 모여 있던 <mark>(−)전하(전자)가 네온전구를 지나 손 쪽으로 이동</mark>하면서 순간적으로 <mark>전류가 흘러</mark> 불이 켜진다. 전자가 빠져나가면 컵과 손 사이의 <mark>전압이 작아져</mark> 전류가 더 흐르지 못하므로 불이 꺼진다. 전지처럼 <mark>전압을 계속 유지해 주는 장치가 없기</mark> 때문에 불은 잠깐만 켜진다.'},
  {id:'q2',title:'전기 회로에서 전류의 방향과 전자의 이동 방향이 서로 반대인 까닭을 설명해 보자.',
   mini:{kind:'circuit',title:'스위치를 닫은 전기 회로',guide:'스위치를 열고 닫거나 전지 방향을 바꾸며 두 화살표를 비교해 보세요.'},
   hint:'간이 실험에서 파란 점(전자)이 전지의 어느 극에서 나와 어느 극으로 가는지, 주황 화살표(전류의 방향)는 어느 쪽을 가리키는지 비교해 보세요. 이론의 ‘전자의 이동 방향과 전류의 방향’ 카드도 참고해 보세요.',
-  model:'과학자들이 <mark>전자의 존재를 알기 전에</mark> 전류가 전지의 <mark>(+)극에서 (−)극 쪽으로 흐른다고 정해</mark> 사용해 왔기 때문이다. 나중에 금속 도선에서 전류를 운반하는 입자가 (−)전하를 띤 전자임이 밝혀졌고, 금속 도선의 전자는 <mark>(−)극에서 (+)극 쪽으로 이동</mark>한다는 사실이 밝혀졌지만 처음 정한 전류의 방향을 그대로 쓰므로 두 방향은 반대가 된다.'},
+  model:'과학자들이 <mark>전자의 존재를 알기 전에</mark> 전류가 전지의 <mark>(+)극에서 (−)극 쪽으로 흐른다고 정했는데</mark>, 실제로 도선 속에서는 (−)전하를 띤 전자가 <mark>(−)극에서 (+)극 쪽으로 이동</mark>하기 때문이다. 전자의 이동 방향이 밝혀진 뒤에도 처음 정한 전류의 방향을 지금까지 그대로 쓰고 있다.'},
  {id:'q3',title:'전기 회로에서 전구에 불이 켜지는 과정을 물 흐름 모형에 비유하여 설명해 보자.',
   mini:{kind:'water',title:'펌프가 돌아가는 물 흐름 모형',guide:'펌프를 끄거나 밸브를 잠가 보고, 높이차와 물레방아가 어떻게 바뀌는지 보세요.'},
   hint:'간이 실험에서 ‘펌프 끄기’와 ‘밸브 잠그기’를 눌러 보고 높이차와 물레방아를 보세요. ‘물 흐름 모형’ 화면의 ‘역할 연결하기’를 먼저 채워 두면 비유를 쓰기 쉬워요.',
-  model:'<mark>전지는 펌프</mark>처럼 <mark>전압(물의 높이차)</mark>을 유지해 <mark>전류(물의 흐름)</mark>가 계속 흐르게 한다. 물이 흐르며 물레방아를 돌리듯 전류가 <mark>전구</mark>를 지나며 불을 켜고, 밸브를 잠그면 물이 멈추듯 <mark>스위치</mark>를 열면 전류가 흐르지 않는다. 물레방아를 지나도 물의 양이 줄지 않듯 전구를 지나도 전류의 세기는 같다.'}];
+  model:'<mark>전지는 펌프</mark>처럼 <mark>전압(물의 높이차)</mark>을 유지해 <mark>전류(물의 흐름)</mark>가 계속 흐르게 하고, 물의 흐름이 물레방아를 돌리듯 전류가 <mark>전구</mark>를 지나면서 불을 켠다. 밸브가 열려 있어야 물레방아 쪽으로 물이 흐르듯 스위치가 닫혀 있어야 전류가 흐른다.'}];
 const qsec=document.createElement('section');qsec.dataset.view='questions';qsec.className='qwrap';qsec.setAttribute('aria-labelledby','h-questions');main.append(qsec);views.questions=qsec;
 qsec.innerHTML=`<div class="qhead"><h2 id="h-questions">탐구 질문</h2><span class="qprog" data-prog></span></div>
 <p class="policy">답안은 이 수업 화면에서 자동 저장돼요. 모범 답안을 열면 처음 쓴 답안은 그대로 잠기고, 그 아래에 ✏️ 다시 쓰기 칸이 열려요. 처음 답안을 고쳐 덮어쓰지 않으니 마음 편히 먼저 써 보세요.</p>
@@ -1407,7 +1407,7 @@ function buildMini(q,card){const host=$('[data-mini]',card),res=$('[data-mres]',
   if(q.mini.kind==='neon'){
     let lab=null;const paint=()=>{if(!lab)return;const c=lab.charges(),e=lab.free.length;tbl.innerHTML=`<tr><th>알루미늄 컵</th><th>양전하 중심 (+)</th><th>전자 (−)</th><th>전하</th></tr><tr><td>모형 묶음 수</td><td>${CUP_N}</td><td>${e}</td><td>${fmtQ(c.cup)}</td></tr><tr><td colspan="3">손으로 빠져나간 전자</td><td>${c.hand}묶음</td></tr>`;$('[data-nl]',ctrl).textContent=lab.nContact?'네온전구 떼기':'▶ 네온전구 대기'};
     ctrl.innerHTML=`<button class="btn primary" data-a><span data-nl>▶ 네온전구 대기</span></button><button class="btn ghost" data-r>${I.reset}처음으로</button>`;tbl.hidden=false;
-    lab=new NeonLab(host,{preset:'q1',vb:[330,150,710,370],seed:9,onEvent:(type,L,d)=>{const c=L.charges();
+    lab=new NeonLab(host,{preset:'q1',vb:[330,90,710,430],seed:9,onEvent:(type,L,d)=>{const c=L.charges();
       if(type==='flash')res.textContent=`네온전구에 순간 불이 켜졌다가 꺼졌어요 · 컵의 전자 모형 ${d}묶음이 네온전구를 지나 손 쪽으로 이동했어요`;
       if(type==='neon-none')res.textContent=`네온전구를 댔지만 불이 켜지지 않았어요 · 알루미늄 컵 전하 ${fmtQ(c.cup)}`;
       if(type==='touch')res.textContent=`풍선의 전자 모형 ${d}묶음이 알루미늄 컵으로 옮겨 갔어요`;
@@ -1417,14 +1417,14 @@ function buildMini(q,card){const host=$('[data-mini]',card),res=$('[data-mres]',
     $('[data-a]',ctrl).onclick=()=>{lab.act('neon');setTimeout(paint,900)};$('[data-r]',ctrl).onclick=()=>lab.reset();
     setInterval(()=>{if(card.open)paint()},400);return lab}
   if(q.mini.kind==='circuit'){
-    let lab=null;lab=new CircuitLab(host,{compact:true,closed:true,vb:[40,40,920,470],seed:3,onEvent:(type,L)=>{if(['closed','opened','flip','reset','change'].includes(type))setTimeout(paint,0)}});
+    let lab=null;lab=new CircuitLab(host,{compact:true,closed:true,vb:[40,40,920,470],seed:3,onEvent:(type,L)=>{if(['closed','opened','flip','reset','change'].includes(type))setTimeout(()=>paint(),0)}});
     const paint=()=>{if(!lab)return;const s=lab.s;res.textContent=!s.closed?'스위치가 열려 있어요 · 전자들이 제자리에서 불규칙하게 움직여요':`전자는 (−)극에서 나와 (+)극 쪽으로 이동하고, 주황 화살표는 (+)극에서 (−)극 쪽을 가리켜요 · (+)극이 ${s.reversed?'아래':'위'}`;
       $('[data-sl]',ctrl).textContent=s.closed?'스위치 열기':'▶ 스위치 닫기'};
     ctrl.innerHTML=`<button class="btn primary" data-a><span data-sl></span></button><button class="btn" data-f>${I.flip}전지 방향 바꾸기</button><button class="btn ghost" data-r>${I.reset}처음으로</button>`;
     $('[data-a]',ctrl).onclick=()=>{lab.toggleSwitch();paint()};$('[data-f]',ctrl).onclick=()=>lab.flip();$('[data-r]',ctrl).onclick=()=>lab.reset();
     paint();return lab}
   if(q.mini.kind==='water'){
-    let lab=null;lab=new WaterLab(host,{preset:'steady',vb:[100,70,840,450],onEvent:()=>setTimeout(paint,0)});
+    let lab=null;lab=new WaterLab(host,{preset:'steady',vb:[100,70,840,470],onEvent:()=>setTimeout(()=>paint(),0)});
     const paint=()=>{if(!lab)return;const s=lab.s,st=lab.status();res.textContent=st.obs;$('[data-pl]',ctrl).textContent=s.pump?'펌프 끄기':'펌프 켜기';$('[data-vl]',ctrl).textContent=s.valve?'밸브 잠그기':'밸브 열기';
       tbl.hidden=false;const {d,Q}=lab.flows();tbl.innerHTML=`<tr><th>펌프</th><th>밸브</th><th>높이차</th><th>물레방아</th></tr><tr><td>${s.pump?'켜짐':'꺼짐'}</td><td>${s.valve?'열림':'잠김'}</td><td>${(Math.abs(d)/10).toFixed(1)} cm</td><td>${Math.abs(Q)>.3?'돌아감':'멈춤'}</td></tr>`};
     ctrl.innerHTML=`<button class="btn" data-p><span data-pl></span></button><button class="btn" data-v><span data-vl></span></button><button class="btn ghost" data-r>${I.reset}처음으로</button>`;
@@ -1558,8 +1558,9 @@ function withIdentity(cb,{allowBlank}){if(identity&&(allowBlank||(identity.sid&&
     const no=$('[data-no]',body);if(no)no.onclick=closeDialog;setTimeout(()=>$('#fSid').focus(),50)})}
 
 /* ═════════ 결과 저장 (PNG) ═════════ */
-const clean=x=>String(x??'').replace(/[\\/:*?"<>|\s\x00-\x1f]/g,'');
+const clean=x=>String(x??'').replace(/[\\/:*?"<>|\s\x00-\x1f\x7f-\x9f]/g,'');
 function stamp(){const d=new Date(),p=x=>String(x).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`}
+function ymd(d=new Date()){const p=x=>String(x).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`} /* 리포트 파일명 날짜: 기기 로컬 날짜(UTC 변환 금지) */
 const PROPS=['display','visibility','fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-linecap','stroke-linejoin','opacity','font-family','font-size','font-weight','font-variant-numeric','text-anchor','paint-order','stop-color','stop-opacity'];
 async function renderPNG(){const lab=labs[current],tab=TABS.find(t=>t.id===current),orig=lab.svg,clone=freezeSVG(orig),captured=lab.status();
   $$('.focus-ring',clone).forEach(n=>n.remove());
@@ -1597,7 +1598,7 @@ function openReport(){openDialog('학습 리포트 · 학습지',`<p>인쇄 창�
   $('[data-no]',body).onclick=closeDialog;$('[data-go]',body).onclick=()=>{const kind=$('input[name=rk]:checked',body).value,withModel=$('#rModel').checked,teacher=$('#rTeacher').checked;closeDialog();
     if(kind==='blank')printDoc('blank',{teacher});else withIdentity(()=>printDoc('report',{withModel}),{allowBlank:false})}})}
 function printFig(q){const box=document.createElement('div');box.className='pv-fig';const tmp=document.createElement('div');tmp.style.cssText='position:absolute;left:-9999px;width:800px;height:300px';document.body.append(tmp);
-  let lab;if(q.mini.kind==='neon')lab=new NeonLab(tmp,{preset:'q1',vb:[330,150,710,370],seed:9});else if(q.mini.kind==='circuit')lab=new CircuitLab(tmp,{compact:true,closed:true,vb:[40,40,920,470],seed:3});else lab=new WaterLab(tmp,{preset:'steady',vb:[100,70,840,450]});
+  let lab;if(q.mini.kind==='neon')lab=new NeonLab(tmp,{preset:'q1',vb:[330,90,710,430],seed:9});else if(q.mini.kind==='circuit')lab=new CircuitLab(tmp,{compact:true,closed:true,vb:[40,40,920,470],seed:3});else lab=new WaterLab(tmp,{preset:'steady',vb:[100,70,840,470]});
   if(lab.v){lab.v.showI=false}lab.draw();const svg=lab.svg;svg.style.setProperty('--k','1.6');box.append(svg);tmp.remove();return box.outerHTML}
 function printDoc(kind,{withModel,teacher}){const pv=$('#printview'),d=new Date(),date=`${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`;
   let h=`<h1>${kind==='blank'?'학습지':'학습 리포트'} · ${LAB_NAME}</h1><div class="pv-meta">`;
@@ -1611,7 +1612,7 @@ function printDoc(kind,{withModel,teacher}){const pv=$('#printview'),d=new Date(
     h+='</section>'});
   if(kind==='blank'&&teacher)h+=`<section class="pv-q" style="break-before:page"><h2>교사용 정답지</h2>${QS.map((q,i)=>`<p><b>Q${i+1}.</b> ${q.model.replace(/<\/?mark>/g,'')}</p>`).join('')}</section>`;
   h+=`<p class="pv-foot">🧪 송쌤과학 가상실험실 · ⓒ 2026 송세호 | 아주중학교 · 유튜브에서 더 보기: youtube.com/@songsamscience · ⚠ 무단 복제·상업적 이용 금지</p>`;
-  pv.innerHTML=h;const old=document.title;document.title=[LAB_NAME,kind==='blank'?'학습지':'리포트',kind==='blank'?'':identity?.sid,kind==='blank'?'':identity?.name].map(clean).filter(Boolean).join('_');
+  pv.innerHTML=h;const old=document.title;document.title=(kind==='blank'?[LAB_NAME,'학습지']:[LAB_NAME,identity?.sid,identity?.name,ymd(d)]).map(clean).filter(Boolean).join('_');
   const back=()=>{document.title=old;window.removeEventListener('afterprint',back)};window.addEventListener('afterprint',back);setTimeout(()=>window.print(),60)}
 
 /* ═════════ 테마 · 전체화면 · 단축키 ═════════ */
