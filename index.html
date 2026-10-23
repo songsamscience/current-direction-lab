@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<meta name="version" content="3.5">
+<meta name="version" content="3.6">
 <meta name="description" content="마찰 전기로 네온전구를 켜 보고, 전기 회로 속 전자의 이동 방향과 전류의 방향을 비교하는 가상실험실">
 <meta property="og:title" content="송쌤과학 가상실험실 | 전하와 전류의 이동 방향">
 <meta property="og:description" content="네온전구 · 전기 회로 속 전자 · 물 흐름 모형으로 전류와 전압을 알아보는 가상실험실">
@@ -474,7 +474,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 <script>
 'use strict';
 /* ═════════ 기본 도구 ═════════ */
-const APP_VERSION='3.5', APP_DATE='2026-10-23', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
+const APP_VERSION='3.6', APP_DATE='2026-10-23', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
 const NS='http://www.w3.org/2000/svg';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mod=(a,n)=>((a%n)+n)%n;
@@ -1056,7 +1056,7 @@ class WaterLab{
    두 테두리에 대면 테두리에 몰린 전자가 건너가며 순간 깜박인다. 빨대로 두 접시를 들어 올린 채 다시 이으면 반대로 한 번 더 깜박인다.
    모형: 유도값 u(플라스틱 위 +k · 털가죽 위 −k · 그 밖 0, k=min(q,5)), 테두리 여분 r=n+u,
    이은 순간 흐름 m=trunc((r왼−r오)/2), |m|≥3일 때만 흐른다(점화 전압을 점의 개수로 단순화). 점 1개 = 아주 많은 전하. */
-const DL={N:12,QMAX:8,KMAX:5,MIN:3,RUB:90,SNAP:55,LIFT:60,
+const DL={N:12,QMAX:8,KMAX:5,MIN:3,RUB:90,SNAP:55,
   SEAT:{plastic:[260,336],fur:[640,352]},HOME:{A:[260,160],B:[640,160]},LAMP0:[935,440],FUR0:[640,440],SHELF:160,LAMP_YMIN:178};
 /* 그림 상자(장면 단위). 접시는 밑바닥 앞 중심, 털가죽은 아래 가운데, 네온전구는 두 다리 끝의 가운데, 손은 집는 점 기준.
    접시·플라스틱·털가죽은 빌드가 자른 알파 경계가 이 상자에 들어가고(비율 유지, 아래 가운데), 네온전구 두 장은 그림 전체를 같은 상자에 겹친다. */
@@ -1240,9 +1240,6 @@ class DishLab{
         this.queue.push({o:D.name,to:[sx,sy-90],sp:420},{o:D.name,to:[sx,sy],sp:260,seat:s,then:()=>{if(!this.snapDish(D))this.dropDish(D)}})}}
     const toLamp=()=>{const p=this.lampSpot();if(p)this.queue.push({o:'lamp',to:p,sp:320,then:()=>{if(!this.linked)this.emit('neon-miss')}});else this.emit('neon-miss')};
     if(kind==='neon'){if(this.linked){this.queue.push({o:'lamp',to:DL.LAMP0,sp:420});Ticker.kick();return}toLamp()}
-    if(kind==='lift'){lampAway();for(const D of [A,B]){const s=D.seat==='plastic'||D.seat==='fur'?D.seat:(D.name==='A'?'plastic':'fur'),[sx,sy]=DL.SEAT[s];
-        this.queue.push({o:D.name,to:[sx,sy-DL.LIFT],sp:300,then:()=>{D.seat='air';this.checkLink()}})}
-      this.queue.push({wait:.35},{o:'lamp',to:()=>this.lampSpot(),sp:320,then:()=>{if(!this.linked)this.emit('neon-miss')}})}
     Ticker.kick()}
   runQueue(dt){const q=this.queue[0];if(!q)return;q.age=(q.age||0)+dt;
     if(q.wait!=null){if(q.age>=q.wait)this.queue.shift();return}
@@ -1612,7 +1609,7 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
  const sec=labShell(t,LEG_P+LEG_E+LEG_X+LEG_H+LEG_I,`네온전구 <b data-m1>꺼짐</b><span class="sep">·</span><span class="opt">깜박임 <b data-m2>0</b>회</span>`,
  `<div class="panel-scroll">
    <section class="pg"><h3 class="pg-title">실험 순서</h3>
-   <ol class="steps" data-steps><li><b>1</b>털가죽으로 플라스틱 접시를 여러 번 문질러요.</li><li><b>2</b>접시 A를 빨대로 잡아 플라스틱 접시 위에, 접시 B를 털가죽 위에 올려요.</li><li><b>3</b>네온전구를 끌어 두 다리 끝을 두 접시 테두리에 대고 불이 켜지는지 봐요.</li><li><b>4</b>두 접시를 빨대로 들어 올린 채 네온전구를 다시 이어요. 또 깜박일까요?</li></ol>
+   <ol class="steps" data-steps><li><b>1</b>털가죽으로 플라스틱 접시를 여러 번 문질러요.</li><li><b>2</b>접시 A를 빨대로 잡아 플라스틱 접시 위에, 접시 B를 털가죽 위에 올려요.</li><li><b>3</b>네온전구를 끌어 두 다리 끝을 두 접시 테두리에 대고 불이 켜지는지 봐요.</li></ol>
    <p class="help">털가죽·접시·네온전구는 직접 끌어도 되고, 누른 뒤 방향키로 옮겨도 돼요.</p></section>
    <section class="pg"><h3 class="pg-title">보기</h3><div class="toggles">${tg('particles','전하 모형',true)}${tg('showE','전자 이동 방향',true,'var(--neg)')}${tg('showI','전류의 방향',true,'var(--cur)')}</div></section>
    <section class="pg"><p class="caution">실제 실험 · 접시는 빨대를 잡고 옮겨요. 손이 알루미늄 접시에 닿으면 전하가 손으로 빠져나가요. 네온전구는 두 다리 끝이 두 접시 테두리에 모두 닿아야 해요.</p></section>
@@ -1621,9 +1618,9 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
    <button class="btn actbtn wide" data-act="rub"><span class="n">1</span>접시 문지르기</button>
    <button class="btn actbtn wide" data-act="place"><span class="n">2</span>접시 올리기</button>
    <button class="btn actbtn wide" data-act="neon"><span class="n">3</span><span data-neonlbl>네온전구 잇기</span></button>
-   <div class="foot-row"><button class="btn actbtn" data-act="lift" style="min-width:0" aria-label="4 두 접시를 빨대로 들어 올린 채 다시 잇기"><span class="n">4</span>들어서 잇기</button><button class="btn ghost" data-act="reset" aria-label="처음으로">${I.reset}처음으로</button></div>
+   <button class="btn ghost wide" data-act="reset">${I.reset}처음으로</button>
   </div>`);
- const done=[0,0,0,0];
+ const done=[0,0,0];
  const READY={obs:'털가죽으로 플라스틱 접시를 여러 번 문질러 보세요',ex:'털가죽을 끌어 플라스틱 접시 위에서 좌우로 움직이거나, ‘1 접시 문지르기’를 눌러요.'};
  const msg={...READY};const set=(o,e)=>{if(o!=null)msg.obs=o;if(e!=null)msg.ex=e};
  let lab=null;lab=new DishLab($('[data-stage]',sec),{onEvent:(type,L,d)=>{const c=L.charges(),nm=D=>'접시 '+D.name,q=L.q;
@@ -1635,24 +1632,23 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
      if(!L.k())set(`${nm(D)}를 올렸지만 자유 전자는 그대로 떠돌아요 · ${nm(D)} 전하 ${fmtQ(-D.n)}`,'플라스틱 접시를 먼저 털가죽으로 여러 번 문질러요.');
      else if(d.seat==='plastic')set(`${nm(D)}의 자유 전자가 아래 (−)에 밀려 위쪽 테두리 둘레로 몰렸어요 · ${nm(D)} 전하 ${fmtQ(-D.n)}`,'아래쪽 바닥에는 원자핵(+)이 드러나요. 원자핵은 제자리에 있고 자유 전자만 움직여요.');
      else set(`${nm(D)}의 자유 전자가 아래 (+)에 끌려 아래쪽 바닥으로 내려갔어요 · ${nm(D)} 전하 ${fmtQ(-D.n)}`,'위쪽 테두리 둘레에는 원자핵(+)이 드러나요. 원자핵은 제자리에 있고 자유 전자만 움직여요.')}
-   if(type==='lift'&&d.was)set(`${nm(d.D)}를 들어 올렸어요 · 자유 전자가 다시 고르게 퍼져요`,`${nm(d.D)}의 전하(${fmtQ(-d.D.n)})는 그대로예요. 다른 접시도 들어 올린 채 네온전구를 다시 이어 봐요.`);
+   if(type==='lift'&&d.was)set(`${nm(d.D)}를 들어 올렸어요 · 자유 전자가 다시 고르게 퍼져요`,`${nm(d.D)}의 전하(${fmtQ(-d.D.n)})는 그대로예요.`);
    if(type==='hold'&&!d.seated)set(`${nm(d)}를 빨대로 들고 있어요 · ${nm(d)} 전하 ${fmtQ(-d.n)}`,'플라스틱 접시(또는 털가죽) 위에 내려놓거나 위쪽 준비대에 올려놓아요.');
    if(type==='body-press')set(null,'접시는 빨대를 잡고 옮겨요. 실제 실험에서 손이 알루미늄 접시에 닿으면 전하가 손으로 빠져나가요.');
    if(type==='flash'){const {n,donor,acc,both}=d;
      if(!both){done[2]=1;set(`네온전구에 순간 불이 켜졌다가 꺼졌어요 · ${nm(donor)}의 전자 ${n}개가 네온전구를 지나 ${nm(acc)}로 이동했어요 · 접시 A ${fmtQ(c.A)}, 접시 B ${fmtQ(c.B)}`,'전자가 나오는 쪽 전극 둘레가 빛나요. 전류의 방향(주황)은 전자의 이동 방향(파랑)과 반대예요. 전자가 다 건너가면 불이 꺼져요.')}
-     else{if(done[2])done[3]=1;set(`네온전구가 한 번 더 깜박였어요 · 이번에는 ${nm(donor)}의 전자 ${n}개가 ${nm(acc)}로 건너가 반대쪽 전극이 빛났어요 · 접시 A ${fmtQ(c.A)}, 접시 B ${fmtQ(c.B)}`,'두 접시를 다시 받침 위에 올리고 이어 보세요. 또 깜박일까요?')}
-     if(L.flashes>=3)set(null,'들었다 놓았다 할 때마다 한 번씩만 깜박여요. 불을 계속 켜 두려면 무엇이 필요할까요? ‘03 회로 속 전자’에서 전지를 이어 봐요.')}
+     else set(`네온전구가 한 번 더 깜박였어요 · 이번에는 ${nm(donor)}의 전자 ${n}개가 ${nm(acc)}로 건너가 반대쪽 전극이 빛났어요 · 접시 A ${fmtQ(c.A)}, 접시 B ${fmtQ(c.B)}`,'접시를 들어 올리면 아래 접시와 털가죽의 영향이 사라져, 앞에서 건너간 전자가 되돌아가요.')}
    if(type==='neon-none'){const m=Math.abs(d.m);
-     if(m)set(`네온전구를 이었지만 불이 켜지지 않았어요 · 건너갈 전자가 ${m}개뿐이에요`,q<3?'여러 번 문질러 전하를 더 모은 뒤 다시 해 봐요.':'두 접시를 각각 플라스틱 접시와 털가죽 위에 올리거나, 둘 다 빨대로 들어 올린 채 이어 봐요.');
-     else if(L.flashes)set('네온전구를 이었지만 불이 켜지지 않았어요 · 두 접시 테두리에 더 흐를 전자가 없어요','두 접시를 빨대로 들어 올린 채(또는 다시 받침 위에 내려놓고) 이어 봐요.');
+     if(m)set(`네온전구를 이었지만 불이 켜지지 않았어요 · 건너갈 전자가 ${m}개뿐이에요`,q<3?'여러 번 문질러 전하를 더 모은 뒤 다시 해 봐요.':'두 접시를 각각 플라스틱 접시와 털가죽 위에 올린 뒤 이어 봐요.');
+     else if(L.flashes)set('네온전구를 이었지만 불이 켜지지 않았어요 · 두 접시 테두리에 더 흐를 전자가 없어요','전자가 한 번 건너가고 나면 더 흐르지 않아 한 번만 깜박여요. 불을 계속 켜 두려면 무엇이 필요할까요? ‘03 회로 속 전자’에서 전지를 이어 봐요.');
      else set('네온전구를 이었지만 불이 켜지지 않았어요 · 접시에 전하가 몰려 있지 않아요','플라스틱 접시를 문지르고 두 접시를 받침 위에 올린 뒤 이어요.')}
-   if(type==='neon-miss'){if(L.dishes.some(D=>D.seat==='shelf'))set('준비대 위에서는 네온전구를 이을 수 없어요','두 접시를 받침 위에 올리거나 빨대로 들어 올린 채 이어요.');else set('네온전구의 두 다리가 두 접시 테두리에 모두 닿지 않았어요','두 접시 사이 위쪽으로 네온전구를 끌어 두 다리 끝을 테두리에 대요. 가까이 가면 저절로 붙어요.')}
+   if(type==='neon-miss'){if(L.dishes.some(D=>D.seat==='shelf'))set('준비대 위에서는 네온전구를 이을 수 없어요','두 접시를 플라스틱 접시와 털가죽 위에 올린 뒤 이어요.');else set('네온전구의 두 다리가 두 접시 테두리에 모두 닿지 않았어요','두 접시 사이 위쪽으로 네온전구를 끌어 두 다리 끝을 테두리에 대요. 가까이 가면 저절로 붙어요.')}
    if(lab)syncD()}});
  labs.dish=lab;wirePause(sec,lab);
  function syncD(){if(!lab)return;setStatus(sec,msg);stepsState($('[data-steps]',sec),done);
    $('[data-m1]',sec).textContent=lab.glowA>.3?'켜짐':'꺼짐';$('[data-m2]',sec).textContent=lab.flashes;
    $('[data-neonlbl]',sec).textContent=lab.linked?'네온전구 떼기':'네온전구 잇기';
-   const next=!done[0]?'rub':!done[1]?'place':!done[2]?'neon':'lift';$$('[data-act]',sec).forEach(b=>b.classList.toggle('primary',b.dataset.act===next))}
+   const next=!done[0]?'rub':!done[1]?'place':'neon';$$('[data-act]',sec).forEach(b=>b.classList.toggle('primary',b.dataset.act===next))}
  sec.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;if(b.dataset.act==='reset'){lab.reset();return}lab.act(b.dataset.act);setTimeout(syncD,1400)});
  $$('[data-v]',sec).forEach(i=>i.addEventListener('change',()=>{lab.v[i.dataset.v]=i.checked;lab.draw()}));
  setInterval(()=>{if(current==='dish'){$('[data-m1]',sec).textContent=lab.glowA>.3?'켜짐':'꺼짐';$('[data-neonlbl]',sec).textContent=lab.linked?'네온전구 떼기':'네온전구 잇기'}},150);
@@ -1870,7 +1866,7 @@ function theoryHTML(){return `
  <details class="th-more"><summary>더 알아보기 · 전자는 얼마나 빠를까요?</summary><p>전자들의 평균 이동 속도(표류 속도)는 전류·도선 단면적·전자 밀도에 따라 달라져요. 보통 금속 도선에서는 매우 느려요. 그런데도 스위치를 닫자마자 전구가 켜지는 것은, 전기장의 변화가 회로를 따라 빠르게 전달되어 이미 도선에 있던 전자들이 반응하기 때문이에요. 이 전달은 순간적이지 않아요. 이 실험실은 보기 쉽게 전자를 빠르게 나타냈어요.</p><p>네온전구에서 빛은 (−)쪽 전극 둘레에서 나요. 그래서 간이 실험의 네온전구도 알루미늄 컵 쪽 전극이 빛나요.</p></details>
  <details class="th-more" id="th-help"><summary>사용법과 단축키</summary>
   <p>01 네온전구 · 풍선을 털가죽 위에서 좌우로 끌어 문지르고, 알루미늄 컵에 댄 뒤 네온전구를 컵에 대요. 조작판의 1·2·3 버튼도 같은 일을 해요.</p>
-  <p>02 접시 전구 · 털가죽을 끌어 뒤집어 놓은 플라스틱 접시 위에서 좌우로 문지르고, 두 알루미늄 접시를 빨대로 잡아 플라스틱 접시와 털가죽 위에 올린 뒤 네온전구의 두 다리를 두 테두리에 대요. 두 접시를 빨대로 들어 올린 채 다시 이어 보면 반대쪽 전극이 깜박여요. 네온전구는 다리 끝이 테두리에 가까이 가면 저절로 붙어요. 조작판의 1~4 버튼도 같은 일을 해요.</p>
+  <p>02 접시 전구 · 털가죽을 끌어 뒤집어 놓은 플라스틱 접시 위에서 좌우로 문지르고, 두 알루미늄 접시를 빨대로 잡아 플라스틱 접시와 털가죽 위에 올린 뒤 네온전구의 두 다리를 두 테두리에 대요. 네온전구는 다리 끝이 테두리에 가까이 가면 저절로 붙어요. 조작판의 1~3 버튼도 같은 일을 해요.</p>
   <p>03 회로 속 전자 · 스위치(S)를 닫고 여는 동안 도선과 확대 렌즈 속 전자를 보고, 전지 방향과 개수를 바꿔 봐요. 초록 고리를 끌면 렌즈가 보는 곳이 바뀌어요.</p>
   <p>04 물 흐름 모형 · 펌프·밸브를 켜고 끄며 높이차와 물레방아를 보고, ‘역할 연결하기’를 채워요.</p>
   <p>장면 아래 −·+·전체 단추로 장면을 확대해 볼 수 있어요. 확대한 뒤에는 빈 곳을 끌어 옮겨요.</p>
