@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<meta name="version" content="3.6">
+<meta name="version" content="3.7">
 <meta name="description" content="마찰 전기로 네온전구를 켜 보고, 전기 회로 속 전자의 이동 방향과 전류의 방향을 비교하는 가상실험실">
 <meta property="og:title" content="송쌤과학 가상실험실 | 전하와 전류의 이동 방향">
 <meta property="og:description" content="네온전구 · 전기 회로 속 전자 · 물 흐름 모형으로 전류와 전압을 알아보는 가상실험실">
@@ -211,12 +211,51 @@ main{min-width:0;overflow:auto;padding:var(--sp-4) var(--sp-5);overscroll-behavi
 .actbtn{justify-content:flex-start;text-align:left;white-space:normal;line-height:1.3;padding:6px 12px}
 .actbtn .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)}
 .actbtn.primary .n{color:var(--on-accent)}
-.matchrow{display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:center;margin-bottom:6px}
-.matchrow span{font-size:13px;font-weight:650}
-.matchrow select{width:100%;min-height:40px;border:1px solid var(--line-2);border-radius:var(--r-1);background:var(--surface-0);padding:4px 8px;font-size:16px}
-.matchrow select[data-ok="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
-.matchrow select[data-ok="false"]{border-color:var(--danger);box-shadow:inset 3px 0 0 var(--danger)}
 .matchmsg{min-height:1.6em;margin:6px 0 0;font-size:12.5px;line-height:1.55;color:var(--text-1)}
+
+/* 04 회로와 비교 · 짝 맞추기 */
+.tool.cmp[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.lab.cmp .stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+.lab.cmp .stage>svg.scene{position:relative;inset:auto;grid-area:1/1;width:100%;height:100%;min-width:0;min-height:0}
+.lab.cmp .view-tools{display:none}
+.twin{grid-area:1/2;position:relative;min-width:0;min-height:0;border-left:1px solid var(--line-1)}
+.twin>svg.scene{position:absolute;inset:0;width:100%;height:100%}
+.pane-tag{position:absolute;left:10px;top:8px;z-index:2;padding:3px 10px;border-radius:var(--r-full);background:var(--surface-1);border:1px solid var(--line-1);font-size:11.5px;font-weight:800;color:var(--text-2);pointer-events:none}
+.mboard{grid-area:2/1/3/3;border-top:1px solid var(--line-1);background:var(--surface-1);padding:10px 12px}
+.mb-grid{display:grid;grid-template-columns:96px repeat(5,minmax(0,1fr));gap:14px 8px}
+.mb-rl{display:grid;place-items:center;min-height:38px;padding:0 6px;border-radius:var(--r-2);font-size:12.5px;font-weight:800;line-height:1.2;text-align:center}
+.mb-rl.w{background:var(--water-deep);color:#fff}
+.mb-rl.c{background:var(--accent);color:var(--on-accent)}
+.mb-src,.mb-slot,.mb-card{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;min-height:38px;padding:0 6px;border-radius:var(--r-2);font:750 14px/1.2 var(--font-ui);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mb-src{border:1px solid color-mix(in oklab,var(--water) 45%,transparent);background:color-mix(in oklab,var(--water) 16%,var(--surface-1));color:var(--text-1)}
+.mb-src[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.mb-src[data-ok="true"]{border-color:var(--accent)}
+.mb-slot{border:1.5px dashed var(--line-2);background:var(--surface-0);color:var(--text-1);touch-action:none}
+.mb-slot .ph{color:var(--text-3);font-weight:600}
+.mb-slot::before{content:'⇅';position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:12px;line-height:14px;color:var(--accent);pointer-events:none}
+.mb-slot[data-state="filled"]{border-style:solid;border-color:var(--text-3)}
+.mb-slot[data-state="ok"]{border:1.5px solid var(--accent);background:var(--accent-soft);color:var(--accent);cursor:default}
+.mb-slot[data-state="bad"]{border:1.5px solid var(--danger);background:color-mix(in oklab,var(--danger) 14%,var(--surface-0))}
+.mb-slot svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.mb-slot.sel,.mb-slot.drop{border-style:solid;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 30%,transparent)}
+.mb-tray{display:flex;align-items:center;gap:8px;margin-top:10px;min-height:40px}
+.mb-tl{flex:none;width:96px;font-size:12px;font-weight:700;color:var(--text-2);text-align:center}
+.mb-cards{display:flex;flex-wrap:wrap;gap:6px}
+.mb-card{min-width:64px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--text-1);box-shadow:0 2px 0 var(--line-1);touch-action:none;cursor:grab;transition:transform var(--dur-fast)}
+.mb-card[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);transform:translateY(-2px)}
+.mb-card.lifting,.mb-slot.lifting{opacity:.4}
+.mb-none{font-size:12px;color:var(--text-3)}
+.mb-msg{flex:1;min-width:0;margin:0;font-size:12.5px;line-height:1.45;color:var(--text-1)}
+.mb-tray .btn{flex:none;min-height:38px}
+.mb-ghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;padding:8px 14px;border-radius:var(--r-2);background:var(--accent);color:var(--on-accent);font:800 14px var(--font-ui);box-shadow:var(--shadow-2)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+@media(hover:hover) and (pointer:fine){.mb-src:hover,.mb-card:hover{filter:brightness(1.1)}.mb-slot[data-state="empty"]:hover{border-color:var(--accent)}}
+.pair-hl{fill:color-mix(in oklab,var(--accent) 12%,transparent);stroke:var(--accent);stroke-width:calc(var(--k,1) * 3px);stroke-dasharray:12 7;opacity:0;transition:opacity var(--dur-ui)}
+.pair-hl.line{fill:none;stroke-width:26;stroke-opacity:.38;stroke-dasharray:none;stroke-linejoin:round;stroke-linecap:round}
+.pair-hl.on{opacity:1;animation:hlpulse 1.4s ease-in-out infinite}
+@keyframes hlpulse{50%{opacity:.5}}
+@media(prefers-reduced-motion:reduce){.pair-hl.on,.shake{animation:none}}
 
 /* 장면 SVG — 글자는 화면 px 기준(--k = viewBox 폭 ÷ 실제 폭) */
 svg.scene{touch-action:pan-y;user-select:none;-webkit-user-select:none}
@@ -345,7 +384,7 @@ dialog#dlg.wide{width:min(880px,calc(100% - 32px))}
 
 /* ── 반응형 ── */
 @media(max-width:1180px){.model-caption{display:none}.lab-head .goal{display:none}}
-@media(max-width:1060px){:root{--w-panel:250px}.tool span{display:none}.tool{padding:0 9px}.tool.save span{display:inline}}
+@media(max-width:1060px){:root{--w-panel:250px}.tool span{display:none}.tool{padding:0 9px}.tool.save span,.tool.cmp span{display:inline}}
 @media(max-width:860px){
   .appbody{height:auto;min-height:calc(100dvh - var(--h-top))}
   .rail{position:sticky;top:0;height:calc(100dvh - var(--h-top))}
@@ -382,7 +421,7 @@ dialog#dlg.wide{width:min(880px,calc(100% - 32px))}
   .bench-head{gap:6px;padding:6px 6px 0 10px;min-height:48px}
   .live span{display:none}
   .meter{padding:5px 8px;gap:4px}.meter .opt{display:none}
-  .tool{width:44px;padding:0;justify-content:center}.tool span,.tool.save span{display:none}
+  .tool{width:44px;padding:0;justify-content:center}.tool span,.tool.save span,.tool.cmp span{display:none}
   .status{padding:9px 12px 11px}.obs{font-size:14px}.explain{font-size:12.5px}
   .qbody{padding-left:0}
   .question summary{font-size:15px;gap:8px}
@@ -443,7 +482,9 @@ dialog#dlg.wide{width:min(880px,calc(100% - 32px))}
 :root{--h-top:52px}.topbar{height:52px;padding:0 4px 0 8px;gap:2px}.brand{gap:2px}.brandmark{width:24px;height:24px}.vdiv{margin:0 2px}.channel{width:40px;height:40px}.channel svg{width:20px;height:20px}.utils{gap:0}.ibtn{width:40px;height:40px}.top-title{gap:0}.top-title h1{font-size:14px}.appbody{min-height:calc(100dvh - var(--h-top))}main{padding:12px 8px 90px}.rail{height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}.navbtn{min-height:56px}.lab-head h2{font-size:18px;white-space:normal}.lab-head{gap:8px}.lab-num{font-size:11px}.bench-head{padding:4px 6px 4px 12px;gap:6px;min-height:50px}.live{display:none}.bench-head .meter{margin-left:0;flex:1;font-size:11px;padding:0}.meter b{font-size:12px}.tools{gap:4px}.tool{width:44px}.stage{min-height:200px;aspect-ratio:var(--ar,1000/560)}.scene-foot{padding:4px 6px 4px 12px;flex-wrap:wrap;gap:2px 10px;min-height:40px}.legend{gap:2px 10px}.legend span{font-size:10.5px}.model-caption{display:none}.view-tools button{min-width:36px;padding:0 6px}.status{padding:12px}.obs{font-size:13px}.explain{font-size:12px}.mini svg.scene{min-height:200px}.panel-foot{bottom:auto}
 svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narrow] text.big{font-size:calc(var(--k,1) * 10px)}
 }
-@media(max-width:380px){.topbar{padding:0 2px 0 6px}.top-title h1{font-size:13px}.channel{width:36px}.ibtn{width:36px}.legend{gap:2px 8px}}
+@media(max-width:860px){.lab.cmp .stage{display:flex;flex-direction:column;aspect-ratio:auto;min-height:0}.lab.cmp .stage>svg.scene{height:auto;aspect-ratio:800/450}.twin{flex:none;aspect-ratio:800/450;border-left:0;border-top:1px solid var(--line-1)}}
+@media(max-width:600px){.mb-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:repeat(6,auto);grid-auto-flow:column;gap:6px 24px}.mb-slot::before{content:'⇄';left:-18px;top:50%;transform:translateY(-50%)}.mb-rl{min-height:30px}.mb-tray{flex-wrap:wrap}.mb-tl{width:100%;text-align:left}.mb-cards{width:100%}.mb-card{flex:1 1 0;min-width:56px;min-height:42px}}
+@media(max-width:380px){.bench-head .tools{gap:3px}.bench-head .tool{width:40px}.topbar{padding:0 2px 0 6px}.top-title h1{font-size:13px}.channel{width:36px}.ibtn{width:36px}.legend{gap:2px 8px}}
 
 </style>
 </head>
@@ -474,7 +515,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 <script>
 'use strict';
 /* ═════════ 기본 도구 ═════════ */
-const APP_VERSION='3.6', APP_DATE='2026-10-23', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
+const APP_VERSION='3.7', APP_DATE='2026-10-25', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
 const NS='http://www.w3.org/2000/svg';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mod=(a,n)=>((a%n)+n)%n;
@@ -1480,6 +1521,113 @@ WaterLab.prototype.draw=function(){wd.call(this);if(!this.wc)return;const s=this
 };
 
 
+/* ═════════ 04 ‘회로와 비교’ — 물 흐름 모형 옆에 같은 자리 배치로 그린 전기 회로(짝 판) ═════════
+   물 모형의 펌프·밸브·펌프 세기를 그대로 읽어 함께 움직이지만, 회로는 회로대로 움직인다:
+   펌프를 끄면 전지를 뺀 것 → 전류가 곧바로 멈춘다(물은 남은 높이차만큼 잠깐 더 흐름 — 비유의 한계).
+   좌표는 물 모형과 같다: 전구 = 물레방아 자리(x 388), 스위치 = 밸브 자리(x 510), 전지 = 펌프 자리(x 800). */
+const TW_VB=[110,90,800,450];
+// 도선 한 바퀴를 전류의 방향 순서로: 전지 (+)극 → 위 → 왼쪽 → 아래(전구·스위치) → 전지 (−)극
+const TW_LOOP=[[800,242],[800,120],[222,120],[222,445],[800,445],[800,358]];
+const TW_LEN=TW_LOOP.slice(1).reduce((a,p,i)=>a+Math.hypot(p[0]-TW_LOOP[i][0],p[1]-TW_LOOP[i][1]),0);
+// 기구가 놓인 구간(아래 도선 위 거리) — 화살표·전자를 숨긴다
+const TW_GAPS=[[-1,22],[TW_LEN-22,TW_LEN+1],[1025+346-222-8,1025+430-222+8],[1025+461-222-6,1025+567-222+6]];
+function twAt(dist){let d=mod(dist,TW_LEN);for(let i=1;i<TW_LOOP.length;i++){const [x0,y0]=TW_LOOP[i-1],[x1,y1]=TW_LOOP[i],l=Math.hypot(x1-x0,y1-y0);
+  if(d<=l)return[x0+(x1-x0)*d/l,y0+(y1-y0)*d/l,Math.atan2(y1-y0,x1-x0)*180/Math.PI];d-=l}return[...TW_LOOP[TW_LOOP.length-1],90]}
+const twHidden=d=>{d=mod(d,TW_LEN);return TW_GAPS.some(([a,b])=>d>a&&d<b)};
+// 짝 강조 모양 — 물 모형(water)과 회로(twin) 각각의 좌표
+const PAIR_PART={flow:'current',wheel:'bulb',pump:'battery',diff:'voltage',valve:'switch'};
+const CARD_PART={'전류':'current','전구':'bulb','전지':'battery','전압':'voltage','스위치':'switch'};
+function waterHighlights(lab){const g=S('g',{class:'pair-layer','pointer-events':'none'},lab.svg),h={};
+  h.flow=S('path',{class:'pair-hl line',d:'M300,445H560M720,445H800V120H222V168'},g);
+  h.wheel=S('circle',{class:'pair-hl',cx:388,cy:420,r:78},g);
+  h.pump=S('rect',{class:'pair-hl',x:748,y:224,width:168,height:152,rx:16},g);
+  h.diff=S('rect',{class:'pair-hl',x:134,width:592,rx:10},g);
+  h.valve=S('rect',{class:'pair-hl',x:460,y:350,width:100,height:126,rx:14},g);
+  return h}
+function waterDiffHL(lab,r){const s=lab.s,yA=W.BASE-s.hA,yB=W.BASE-s.hB,t=Math.min(yA,yB)-10,b=Math.max(yA,yB)+10;r.setAttribute('y',t.toFixed(1));r.setAttribute('height',(b-t).toFixed(1))}
+
+class CircuitTwin{
+  constructor(host,water,o={}){
+    this.w=water;this.o=Object.assign({id:uid('t'),vb:TW_VB},o);
+    this.svg=makeScene(host,{vb:this.o.vb,title:'전기 회로',desc:'물 흐름 모형과 같은 자리에 전지, 전구, 스위치를 도선으로 이은 전기 회로. 물 흐름 모형을 조작하면 회로도 함께 바뀐다.'});
+    const r=this.read();this.i=r.I;this.blade=r.closed?0:1;this.slide=r.on?0:1;this.ph=0;this.showE=false;
+    this.build();this.draw();Ticker.add(this);
+  }
+  // 물 모형 상태를 회로로 읽기: 펌프 켜짐 = 전지 연결, 밸브 열림 = 스위치 닫힘, 펌프 세기 = 전지의 전압
+  read(){const s=this.w.s,k=PUMP_K[(s.power||3)-1];return{on:s.pump,closed:s.valve,level:s.pump?(s.power||3):0,I:s.pump&&s.valve?k:0}}
+  build(){const P=this.o.id,sv=this.svg;
+    S('defs',null,sv).innerHTML=`<radialGradient id="${P}-glow"><stop offset="0" style="stop-color:var(--glow);stop-opacity:.95"/><stop offset=".42" style="stop-color:var(--glow);stop-opacity:.34"/><stop offset="1" style="stop-color:var(--glow);stop-opacity:0"/></radialGradient>`;
+    const g=S('g',null,sv);
+    // 도선(전지 자리는 비워 둔다)
+    tube(g,'wire',[[800,250],[800,120],[222,120],[222,445],[348,445]],12);
+    tube(g,'wire',[[428,445],[462,445]],12);tube(g,'wire',[[566,445],[800,445],[800,350]],12);
+    // 전압 표시(전지 옆, 회로 안쪽)
+    this.vG=S('g',null,g);
+    this.vArr=S('path',{d:'M752,250V350M746,258L752,250L758,258M746,342L752,350L758,342',fill:'none',style:'stroke:var(--text-1)','stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round'},this.vG);
+    this.vT=T(this.vG,740,290,'전압','big',{'text-anchor':'end'});
+    this.bars=[0,1,2,3,4].map(i=>S('rect',{x:698+i*9,y:300,width:7,height:16,rx:1.5},this.vG));
+    // 전구(물레방아 자리) — 03 회로와 같은 그림을 1.4배
+    const bg=S('g',{transform:'translate(388 445) scale(1.4) translate(-500 -450)'},g);
+    this.glow=S('circle',{cx:500,cy:394,r:60,fill:`url(#${P}-glow)`,opacity:0},bg);
+    tube(bg,'wire',[[470,450],[490,438]],5);tube(bg,'wire',[[530,450],[500,451]],5);
+    this.bulbIm=sprite(bg,'bulb',473,369,54,83);
+    this.core=S('circle',{cx:500,cy:391,r:9,style:'fill:var(--glow)',opacity:0},bg);
+    // 스위치(밸브 자리) — 누르면 물 모형의 밸브와 함께 바뀐다
+    this.sw=S('g',{class:'hit',tabindex:0,role:'button'},g);
+    S('rect',{class:'focus-ring',x:452,y:380,width:120,height:86,rx:10},this.sw);
+    const sg=S('g',{transform:'translate(510 445) scale(1.2) translate(-501 -110)'},this.sw);
+    sprite(sg,'switch_base',431.5,103.5,139,37);
+    this.bladeG=S('g',null,sg);sprite(this.bladeG,'switch_blade',455.4,87,90,31.4).style.filter='brightness(.75)';
+    S('rect',{x:452,y:380,width:120,height:86,fill:'#ffffff','fill-opacity':0},this.sw);
+    // 전지(펌프 자리) — 펌프를 끄면 전지를 회로에서 뺀다
+    this.bat=S('g',{class:'hit',tabindex:0,role:'button'},g);
+    this.batMove=S('g',null,this.bat);
+    S('rect',{class:'focus-ring',x:762,y:232,width:76,height:136,rx:10},this.batMove);
+    sprite(this.batMove,'battery',770,242,60,116);
+    T(this.batMove,800,274,'+','nostroke',{'text-anchor':'middle',style:'fill:var(--cell-cap);font-weight:800'});
+    T(this.batMove,838,258,'(+)','small t-pos',{'text-anchor':'start'});T(this.batMove,838,354,'(−)','small t-neg',{'text-anchor':'start'});
+    S('rect',{x:762,y:232,width:76,height:136,fill:'#ffffff','fill-opacity':0},this.batMove);
+    // 전류의 방향 화살표 · 전자(보기에서 켬)
+    this.eG=S('g',{'pointer-events':'none'},g);this.es=[...Array(46)].map(()=>eG(this.eG,5));
+    this.aG=S('g',{'pointer-events':'none'},g);this.arrs=[...Array(9)].map(()=>curArrow(this.aG));
+    this.flowArr=curArrow(g);
+    // 이름표 — 물 모형 이름표와 같은 자리
+    this.lb={bulb:T(g,388,316,'','big',{'text-anchor':'middle'}),sw:T(g,510,527,'','big',{'text-anchor':'middle'}),bat:T(g,822,392,'','big',{'text-anchor':'start'}),cur:T(g,372,526,'','big',{'text-anchor':'end'})};
+    // 짝 강조
+    const hl=S('g',{class:'pair-layer','pointer-events':'none'},sv);
+    this.hl={current:S('path',{class:'pair-hl line',d:'M800,250V120H222V445H800V350'},hl),bulb:S('rect',{class:'pair-hl',x:334,y:318,width:108,height:146,rx:16},hl),
+      battery:S('rect',{class:'pair-hl',x:756,y:226,width:88,height:148,rx:14},hl),voltage:S('rect',{class:'pair-hl',x:688,y:236,width:78,height:128,rx:12},hl),switch:S('rect',{class:'pair-hl',x:448,y:376,width:128,height:94,rx:14},hl)};
+    this.bat.addEventListener('click',()=>this.w.setPump(!this.w.s.pump));
+    this.sw.addEventListener('click',()=>this.w.setValve(!this.w.s.valve));
+    for(const n of [this.bat,this.sw])n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();n.dispatchEvent(new Event('click'))}});
+  }
+  tick(dt){const r=this.read(),p=this.w.paused;
+    if(!p){const a=Math.min(1,dt*14);this.i+=(r.I-this.i)*a;if(Math.abs(this.i-r.I)<.002)this.i=r.I;
+      this.blade+=((r.closed?0:1)-this.blade)*Math.min(1,dt*9);this.slide+=((r.on?0:1)-this.slide)*Math.min(1,dt*7);
+      this.ph+=this.i*95*dt}
+    this.draw()}
+  state(){const r=this.read();return{on:r.on,closed:r.closed,lit:r.I>0,level:r.level}}
+  draw(){const r=this.read(),nar=this.svg.hasAttribute('data-narrow'),b=Math.min(1,.62*this.i);
+    this.glow.setAttribute('opacity',b.toFixed(2));this.glow.setAttribute('r',(44+36*b).toFixed(1));this.core.setAttribute('opacity',(b*.9).toFixed(2));
+    this.bulbIm.style.filter=b>.05?'none':'grayscale(1) brightness(.85)';
+    this.bladeG.setAttribute('transform',`rotate(${(-38*this.blade).toFixed(2)} 460 110)`);
+    this.batMove.setAttribute('transform',`translate(${(42*this.slide).toFixed(1)} 0)`);this.batMove.style.opacity=(1-.5*this.slide).toFixed(2);
+    this.bars.forEach((q,i)=>q.style.fill=i<r.level?'var(--accent)':'var(--line-2)');this.vArr.style.opacity=r.level?1:.3;
+    this.vT.textContent=r.level?'전압':'전압 0';
+    const flowing=this.i>.02;this.aG.style.display=flowing?'':'none';
+    if(flowing)this.arrs.forEach((a,i)=>{const d=i*TW_LEN/this.arrs.length+this.ph,[x,y,deg]=twAt(d);a.style.display=twHidden(d)?'none':'';place(a,x,y,deg)});
+    this.eG.style.display=this.showE?'':'none';
+    if(this.showE)this.es.forEach((e,i)=>{const d=i*TW_LEN/this.es.length-this.ph*.8,[x,y,deg]=twAt(d),k=i%2?3:-3,h=Math.abs(deg%180)<1;
+      e.style.display=twHidden(d)?'none':'';place(e,x+(h?0:k),y+(h?k:0))});
+    this.flowArr.style.display=flowing?'':'none';place(this.flowArr,402,521);
+    this.lb.bulb.textContent='전구';this.lb.cur.textContent='전류';
+    this.lb.sw.textContent=`스위치${nar?'':` · ${r.closed?'닫힘':'열림'}`}`;this.lb.bat.textContent=`전지${nar?'':` · ${r.on?'연결':'빠짐'}`}`;
+    this.lb.bat.setAttribute('x',(822+42*this.slide).toFixed(1));
+    if(this.sw._c!==r.closed){this.sw._c=r.closed;this.sw.setAttribute('aria-label',`스위치 — 지금 ${r.closed?'닫힘':'열림'}. 누르면 ${r.closed?'열어요':'닫아요'}`)}
+    if(this.bat._c!==r.on){this.bat._c=r.on;this.bat.setAttribute('aria-label',`전지 — 지금 회로에 ${r.on?'연결됨':'빠져 있음'}. 누르면 ${r.on?'빼요':'끼워요'}`)}
+  }
+}
+
 const I={
   book:'<svg viewBox="0 0 24 24"><path d="M12 6.5C10.3 5 7.6 4.5 4 4.8v13c3.6-.3 6.3.2 8 1.7 1.7-1.5 4.4-2 8-1.7v-13c-3.6-.3-6.3.2-8 1.7z"/><path d="M12 6.5v13"/></svg>',
   full:'<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
@@ -1498,6 +1646,7 @@ const I={
   pencil:'<svg viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/></svg>',
   report:'<svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M10 12h5M10 15.5h5"/></svg>',
   check:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  compare:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="7.5" height="14" rx="1.5"/><rect x="13.5" y="5" width="7.5" height="14" rx="1.5"/><path d="M10.5 12h3"/></svg>',
   flip:'<svg viewBox="0 0 24 24"><path d="M8 4v16M8 4L5 7M8 4l3 3M16 20V4M16 20l-3-3M16 20l3-3"/></svg>',
 };
 const CHK=`<span class="box">${I.check}</span>`;
@@ -1689,44 +1838,143 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
  lab.svg.addEventListener('click',()=>setTimeout(syncC,0));
  syncC();}
 
-/* ── 04 물 흐름 모형 ── */
+/* ── 04 물 흐름 모형 · 회로와 비교 · 짝 맞추기 ── */
 const MATCH=[['flow','물의 흐름','전류'],['wheel','물레방아','전구'],['pump','펌프','전지'],['diff','물의 높이차','전압'],['valve','밸브','스위치']];
 const MATCH_OPTS=['전류','전압','전지','전구','스위치'];
+// 짝을 모두 맞힌 뒤 ‘지금 관찰’ 아래에 보여 줄 비유 문장(물 모형 상태별)
+const CMP_EX={run:'펌프가 높이차를 유지해 물이 계속 흐르듯, 전지가 전압을 유지해 전류가 계속 흘러요. 물이 물레방아를 돌리듯 전류가 전구에 불을 켜요.',
+  shut:'밸브를 잠그면 물이 멈추듯, 스위치를 열면 전류가 멈춰 전구가 꺼져요. 펌프와 전지는 그대로라 높이차와 전압은 남아 있어요.',
+  hold:'밸브가 잠겨 물이 흐르지 않듯, 스위치가 열려 있어 전류가 흐르지 않아요.',
+  drain:'물은 남은 높이차만큼 잠깐 더 흐르지만, 회로는 전지를 빼면 곧바로 전류가 멈춰요. 이 점은 물 흐름 모형과 실제 회로가 달라요.',
+  still:'펌프가 꺼져 높이차가 없으면 물이 흐르지 않듯, 전지가 없으면 전압이 없어 전류가 흐르지 않아요.'};
+let waterCmp=null;
 {const t=TABS.find(x=>x.id==='water');
- const sec=labShell(t,'',`높이차 <b data-md>0.0</b> cm<span class="sep">·</span>물레방아 <b data-mw>멈춤</b>`,
+ const sec=labShell(t,'',`높이차 <b data-md>0.0</b> cm<span class="sep">·</span>물레방아 <b data-mw>멈춤</b><span class="opt" data-cmpm hidden><span class="sep">·</span>전구 <b data-mb>꺼짐</b></span>`,
  `<div class="panel-scroll">
-   <section class="pg"><h3 class="pg-title">역할 연결하기</h3>
-    <p class="help" style="margin:0 0 10px">물 흐름 모형의 각 부분과 비슷한 역할을 하는 전기 회로의 요소를 골라요.</p>
-    ${MATCH.map(([k,w])=>`<div class="matchrow"><span id="ml-${k}">${w}</span><select data-m="${k}" aria-labelledby="ml-${k}"><option value="">고르기</option>${MATCH_OPTS.map(o=>`<option>${o}</option>`).join('')}</select></div>`).join('')}
-    <button class="btn wide" data-check style="margin-top:6px">${I.check}연결 확인하기</button>
-    <p class="matchmsg" data-mmsg aria-live="polite"></p></section>
+   <section class="pg"><h3 class="pg-title">전기 회로와 비교하기</h3>
+    <p class="help" style="margin:0 0 10px">버튼을 누르면 물 흐름 모형 옆에 전기 회로가 나란히 나타나요. 펌프와 밸브를 조작하며 두 그림이 어떻게 함께 바뀌는지 보고, 역할이 비슷한 것끼리 짝을 맞춰요.</p>
+    <button class="btn wide" data-cmpbtn aria-pressed="false">${I.compare}<span data-cmplbl>회로와 나란히 보기</span></button>
+    <p class="matchmsg" data-mprog></p></section>
    <section class="pg"><h3 class="pg-title" id="pw-t">펌프 세기 <b data-pwv style="float:right;color:var(--accent)">3단계</b></h3>
     <input type="range" min="1" max="5" step="1" value="3" data-power aria-labelledby="pw-t" style="width:100%;accent-color:var(--accent);margin:4px 0 2px">
     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-3)"><span>약하게</span><span>세게</span></div>
     <p class="help" style="margin:6px 0 0">펌프가 세면 두 물통의 높이차가 커지고, 물이 더 빨리 흘러 물레방아가 빨리 돌아요.</p></section>
-   <section class="pg"><h3 class="pg-title">보기</h3><div class="toggles">${tg('showMap','회로 이름 함께 보기',false)}</div><p class="help" data-maphelp>연결을 모두 맞히면 켤 수 있어요.</p></section>
+   <section class="pg"><h3 class="pg-title">보기</h3><div class="toggles">${tg('showMap','회로 이름 함께 보기',false)}${tg('showE','회로에 전자의 이동도 보기',false,'var(--neg)')}</div><p class="help" data-maphelp>짝을 모두 맞히면 켤 수 있어요.</p></section>
   </div>
   <div class="panel-foot"><div class="foot-row"><button class="btn primary" data-pump><span data-pumplbl>펌프 켜기</span></button><button class="btn" data-valve><span data-valvelbl>밸브 잠그기</span></button></div>
    <button class="btn ghost wide" data-reset>${I.reset}처음으로</button></div>`);
- let lab=null;lab=new WaterLab($('[data-stage]',sec),{onEvent:()=>{if(lab)syncW()}});
+ $('.tools',sec).insertAdjacentHTML('afterbegin',`<button class="tool cmp" data-cmp aria-pressed="false" title="회로와 비교 (V)">${I.compare}<span>회로와 비교</span></button>`);
+ const stage=$('[data-stage]',sec);
+ let lab=null;lab=new WaterLab(stage,{onEvent:()=>{if(lab)syncW()}});
+ stage.insertAdjacentHTML('beforeend',`<span class="pane-tag" data-wtag hidden>물 흐름 모형</span><div class="twin" data-twin hidden><span class="pane-tag">전기 회로</span></div>
+  <div class="mboard" data-mboard hidden>
+   <div class="mb-grid" role="group" aria-label="물 흐름 모형과 전기 회로의 짝 맞추기">
+    <span class="mb-rl w">물 흐름 모형</span>${MATCH.map(([k,w])=>`<button class="mb-src" data-src="${k}" aria-pressed="false">${w}</button>`).join('')}
+    <span class="mb-rl c">전기 회로</span>${MATCH.map(([k])=>`<button class="mb-slot" data-slot="${k}"></button>`).join('')}
+   </div>
+   <div class="mb-tray"><span class="mb-tl">회로 카드</span><div class="mb-cards" data-cards></div><p class="mb-msg" data-mmsg aria-live="polite"></p><button class="btn" data-check>${I.check}짝 확인</button></div>
+  </div>`);
  labs.water=lab;wirePause(sec,lab);
- const mapT=$('[data-v="showMap"]',sec);
+ const mapT=$('[data-v="showMap"]',sec),eT=$('[data-v="showE"]',sec),board=$('[data-mboard]',sec);
+ let cmp=false,twin=null,wHL=null;
+ const order=[...MATCH_OPTS].sort(()=>Math.random()-.5),checked={};
+ let sel=null,selSlot=null,srcPin=null,hoverN=null,focusN=null,dragEnd=0,dragEl=null;
+ const answer=k=>MATCH.find(m=>m[0]===k)[2],nameOf=k=>MATCH.find(m=>m[0]===k)[1];
+ const okCount=()=>MATCH.filter(([k])=>checked[k]===true).length;
  function allOk(){return MATCH.every(([k,,a])=>LS.match[k]===a)}
- function syncW(){const s=lab.s;setStatus(sec,lab.status());$('[data-pumplbl]',sec).textContent=s.pump?'펌프 끄기':'펌프 켜기';$('[data-valvelbl]',sec).textContent=s.valve?'밸브 잠그기':'밸브 열기';
+ if(allOk())MATCH.forEach(([k])=>checked[k]=true);
+ /* 비교 보기 켜고 끄기 — 회로(짝 판)는 처음 켤 때 만든다 */
+ function setCmp(on){
+   if(on&&!twin){twin=new CircuitTwin($('[data-twin]',sec),lab);wHL=waterHighlights(lab);twin.showE=eT.checked;
+     const d0=lab.draw.bind(lab);lab.draw=()=>{d0();waterDiffHL(lab,wHL.diff)};lab.draw()}
+   if(on&&!cmp)$('[data-fit]',sec).click();
+   cmp=on;sec.classList.toggle('cmp',on);
+   for(const n of [$('[data-twin]',sec),board,$('[data-wtag]',sec),$('[data-cmpm]',sec)])n.hidden=!on;
+   lab.svg.setAttribute('viewBox',(on?TW_VB:lab.svg._vb).join(' '));
+   for(const b of [$('[data-cmp]',sec),$('[data-cmpbtn]',sec)])b.setAttribute('aria-pressed',on);
+   $('[data-cmplbl]',sec).textContent=on?'물 흐름 모형만 보기':'회로와 나란히 보기';
+   eT.closest('.tg').style.display=on?'':'none';mapT.closest('.tg').style.display=$('[data-maphelp]',sec).style.display=on?'none':'';lab.s.showMap=!on&&mapT.checked;
+   $('.legend',sec).innerHTML=on?LEG_I+(eT.checked?LEG_E:''):'';
+   $('.model-caption',sec).textContent=on?'물 흐름 비유 · 회로는 같은 자리 배치':'물 흐름 비유 · cm는 가상 눈금';
+   hoverN=focusN=null;paintHL();renderBoard();syncW();Ticker.kick();
+   requestAnimationFrame(()=>$$('svg.scene',sec).forEach(fitK));
+ }
+ /* 짝 강조 — 물 쪽은 그 칸의 부분, 회로 쪽은 카드가 가리키는 요소(맞힌 짝은 둘 다) */
+ function hlFor(n){if(n.dataset.src){const k=n.dataset.src;return{w:k,t:checked[k]===true?PAIR_PART[k]:null}}
+   if(n.dataset.slot){const k=n.dataset.slot,v=LS.match[k];return{w:k,t:v?CARD_PART[v]:null}}
+   if(n.dataset.card)return{w:null,t:CARD_PART[n.dataset.card]};return null}
+ function paintHL(){if(!wHL)return;const live=n=>n&&n.isConnected?hlFor(n):null,f=live(hoverN)||live(focusN)||(srcPin?{w:srcPin,t:checked[srcPin]===true?PAIR_PART[srcPin]:null}:sel?{w:null,t:CARD_PART[sel]}:selSlot?{w:selSlot,t:null}:null)||{};
+   for(const [k,n] of Object.entries(wHL))n.classList.toggle('on',f.w===k);
+   for(const [k,n] of Object.entries(twin.hl))n.classList.toggle('on',f.t===k)}
+ /* 카드 판 그리기 */
+ function renderBoard(focus){
+   $$('[data-slot]',sec).forEach(b=>{const k=b.dataset.slot,v=LS.match[k]||'',st=!v?'empty':checked[k]===true?'ok':checked[k]===false?'bad':'filled';
+     b.dataset.state=st;b.classList.toggle('sel',selSlot===k);b.innerHTML=v?`<span>${v}</span>${st==='ok'?I.check:''}`:'<span class="ph">?</span>';
+     b.setAttribute('aria-label',`${nameOf(k)}와 짝인 전기 회로 칸 — ${v?v+(st==='ok'?', 맞음':st==='bad'?', 다시 살펴보기':''):'비어 있음'}`)});
+   $$('[data-src]',sec).forEach(b=>{b.setAttribute('aria-pressed',srcPin===b.dataset.src);b.dataset.ok=checked[b.dataset.src]===true});
+   const used=new Set(MATCH.map(([k])=>LS.match[k]).filter(Boolean)),left=order.filter(v=>!used.has(v));
+   $('[data-cards]',sec).innerHTML=left.length?left.map(v=>`<button class="mb-card" data-card="${v}" aria-pressed="${sel===v}">${v}</button>`).join(''):'<span class="mb-none">카드를 모두 놓았어요</span>';
+   const ok=okCount();$('[data-check]',sec).disabled=ok===5;
+   $('[data-mprog]',sec).textContent=ok===5?'다섯 짝을 모두 맞혔어요.':ok?`맞힌 짝 ${ok} / 5`:'';
+   if(focus){const n=$(focus,sec);if(n)n.focus({preventScroll:true})}
+ }
+ const msg=m=>{$('[data-mmsg]',sec).textContent=m};
+ function placeCard(k,v){if(checked[k]===true)return;for(const [j] of MATCH)if(j!==k&&LS.match[j]===v&&checked[j]!==true){delete LS.match[j];delete checked[j]}
+   LS.match[k]=v;delete checked[k];saveL('match');msg('')}
+ function unplace(k){if(checked[k]===true)return;delete LS.match[k];delete checked[k];saveL('match')}
+ function solvedAll(){mapT.disabled=false;mapT.checked=true;lab.s.showMap=!cmp;$('[data-maphelp]',sec).textContent='이름표의 ↔ 뒤가 대응하는 전기 회로 요소예요.'}
+ board.addEventListener('click',e=>{if(performance.now()-dragEnd<350&&dragEl&&dragEl.contains(e.target))return;
+   const c=e.target.closest('[data-card]'),sl=e.target.closest('[data-slot]'),src=e.target.closest('[data-src]');
+   if(c){const v=c.dataset.card;srcPin=null;
+     if(selSlot){const k=selSlot;placeCard(k,v);selSlot=sel=null;renderBoard(`[data-slot="${k}"]`)}else{sel=sel===v?null:v;renderBoard(`[data-card="${v}"]`)}}
+   else if(sl){const k=sl.dataset.slot;srcPin=null;
+     if(checked[k]===true){srcPin=k;renderBoard()}
+     else if(sel){placeCard(k,sel);sel=null;selSlot=null;renderBoard(`[data-slot="${k}"]`)}
+     else if(LS.match[k]){sel=LS.match[k];unplace(k);selSlot=null;renderBoard(`[data-slot="${k}"]`)}
+     else{selSlot=selSlot===k?null:k;renderBoard(`[data-slot="${k}"]`)}}
+   else if(src){const k=src.dataset.src;srcPin=srcPin===k?null:k;sel=selSlot=null;renderBoard()}
+   paintHL()});
+ // 끌어 놓기 — 카드나 놓인 칸을 잡아 다른 칸에 놓는다(칸 밖에 놓으면 카드 칸으로 돌아감)
+ board.addEventListener('pointerdown',e=>{const c=e.target.closest('[data-card],[data-slot]');if(!c||e.button>0)return;
+   const k=c.dataset.slot,v=c.dataset.card||LS.match[k];if(!v||(k&&checked[k]===true))return;
+   const x0=e.clientX,y0=e.clientY;let ghost=null,over=null;
+   const mark=n=>{if(over)over.classList.remove('drop');over=n;if(n)n.classList.add('drop')};
+   const mv=ev=>{if(!ghost){if(Math.hypot(ev.clientX-x0,ev.clientY-y0)<7)return;ghost=document.createElement('div');ghost.className='mb-ghost';ghost.textContent=v;document.body.append(ghost);c.classList.add('lifting');try{c.setPointerCapture(e.pointerId)}catch(_){}}
+     ghost.style.transform=`translate(${ev.clientX}px,${ev.clientY}px) translate(-50%,-50%)`;const n=document.elementFromPoint(ev.clientX,ev.clientY);mark(n&&n.closest('[data-slot]'))};
+   const up=ev=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);if(!ghost)return;
+     ghost.remove();c.classList.remove('lifting');mark(null);dragEnd=performance.now();dragEl=c;
+     const n=ev.type==='pointerup'&&document.elementFromPoint(ev.clientX,ev.clientY),tgt=n&&n.closest('[data-slot]');
+     if(tgt&&board.contains(tgt))placeCard(tgt.dataset.slot,v);else if(k)unplace(k);
+     sel=selSlot=srcPin=null;renderBoard();paintHL()};
+   addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up)});
+ // 가리킨 칸(마우스)·키보드로 옮긴 칸의 짝 부분을 그림에서 밝힌다 — 칸 내용이 바뀌어도 그릴 때마다 다시 읽는다
+ const pick=e=>e.target.closest&&e.target.closest('[data-src],[data-slot],[data-card]');
+ board.addEventListener('pointerover',e=>{if(e.pointerType==='mouse'){hoverN=pick(e);paintHL()}});board.addEventListener('pointerleave',()=>{hoverN=null;paintHL()});
+ board.addEventListener('focusin',e=>{const n=pick(e);focusN=n&&n.matches(':focus-visible')?n:null;paintHL()});board.addEventListener('focusout',()=>{focusN=null;paintHL()});
+ $('[data-check]',sec).addEventListener('click',()=>{const placed=MATCH.filter(([k])=>LS.match[k]);
+   if(!placed.length){msg('회로 카드를 아래 칸에 먼저 놓아 보세요.');return}
+   placed.forEach(([k])=>checked[k]=LS.match[k]===answer(k));const ok=okCount(),empty=5-placed.length;renderBoard();
+   $$('[data-state="bad"]',sec).forEach(b=>{b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')});
+   if(ok===5){msg('다섯 짝을 모두 맞혔어요! 위 칸의 이름을 누르면 두 그림에서 짝이 함께 빛나요.');solvedAll();syncW();announce('다섯 짝을 모두 맞혔어요')}
+   else msg(`${ok}개 맞았어요${empty?` · 빈 칸 ${empty}개`:''}${ok<placed.length?' · 빨간 칸의 카드를 눌러 다른 칸으로 옮겨 보세요':''}`)});
+ function syncW(){const s=lab.s,st=lab.status();
+   if(cmp&&twin){const c=lab.category(),r=twin.read();
+     st.ex=allOk()?CMP_EX[c]:`회로 · 전지 ${r.on?'연결':'빠짐'} · 스위치 ${r.closed?'닫힘':'열림'} · 전구 ${r.I>0?'켜짐, 전류가 흘러요':'꺼짐, 전류가 흐르지 않아요'}${c==='drain'?' — 전류는 곧바로 멈췄지만 물은 높이차가 남아 조금 더 흘러요.':''}`}
+   setStatus(sec,st);$('[data-pumplbl]',sec).textContent=s.pump?'펌프 끄기':'펌프 켜기';$('[data-valvelbl]',sec).textContent=s.valve?'밸브 잠그기':'밸브 열기';
    $('[data-pump]',sec).setAttribute('aria-pressed',s.pump);$('[data-valve]',sec).setAttribute('aria-pressed',!s.valve)}
  $('[data-pump]',sec).addEventListener('click',()=>lab.setPump(!lab.s.pump));
  $('[data-valve]',sec).addEventListener('click',()=>lab.setValve(!lab.s.valve));
  $('[data-reset]',sec).addEventListener('click',()=>lab.reset());
+ for(const b of [$('[data-cmp]',sec),$('[data-cmpbtn]',sec)])b.addEventListener('click',()=>setCmp(!cmp));
  const pwI=$('[data-power]',sec);pwI.addEventListener('input',()=>{lab.setPower(+pwI.value);$('[data-pwv]',sec).textContent=pwI.value+'단계'});
- $$('[data-m]',sec).forEach(s=>{s.value=LS.match[s.dataset.m]||'';s.addEventListener('change',()=>{LS.match[s.dataset.m]=s.value;saveL('match');s.removeAttribute('data-ok')})});
- function paintMatch(show){let ok=0;$$('[data-m]',sec).forEach(s=>{const a=MATCH.find(m=>m[0]===s.dataset.m)[2],good=s.value===a;if(good)ok++;if(show)s.dataset.ok=String(good)});return ok}
- $('[data-check]',sec).addEventListener('click',()=>{const ok=paintMatch(true),m=$('[data-mmsg]',sec);
-   if(ok===5){m.textContent='다섯 개 모두 맞았어요 · 장면의 이름표에 회로 이름을 함께 보여 줄게요.';mapT.disabled=false;mapT.checked=true;lab.s.showMap=true;$('[data-maphelp]',sec).textContent='이름표의 ↔ 뒤가 대응하는 전기 회로 요소예요.'}
-   else m.textContent=`${ok}개가 맞았어요 · 빨간 줄은 다시 살펴볼까요? 펌프를 끄거나 밸브를 잠가 보면 역할이 보여요.`;});
- mapT.disabled=!allOk();if(allOk()){paintMatch(true)}
- mapT.addEventListener('change',()=>{lab.s.showMap=mapT.checked});
- setInterval(()=>{if(current==='water'){const {d,Q}=lab.flows();$('[data-md]',sec).textContent=(Math.abs(d)/10).toFixed(1);$('[data-mw]',sec).textContent=Math.abs(Q)>.3?'돌아감':'멈춤'}},200);
- syncW();}
+ mapT.disabled=!allOk();if(allOk())solvedAll();
+ mapT.addEventListener('change',()=>{lab.s.showMap=mapT.checked&&!cmp});
+ eT.addEventListener('change',()=>{if(twin)twin.showE=eT.checked;$('.legend',sec).innerHTML=cmp?LEG_I+(eT.checked?LEG_E:''):'';Ticker.kick()});
+ eT.closest('.tg').style.display='none';
+ setInterval(()=>{if(current==='water'){const {d,Q}=lab.flows();$('[data-md]',sec).textContent=(Math.abs(d)/10).toFixed(1);$('[data-mw]',sec).textContent=Math.abs(Q)>.3?'돌아감':'멈춤';if(twin)$('[data-mb]',sec).textContent=twin.i>.05?'켜짐':'꺼짐'}},200);
+ renderBoard();syncW();
+ waterCmp={toggle:()=>setCmp(!cmp),on:()=>cmp,twin:()=>twin,score:okCount,
+   clear(){for(const k of Object.keys(checked))delete checked[k];sel=selSlot=srcPin=null;msg('');mapT.checked=false;mapT.disabled=true;lab.s.showMap=false;$('[data-maphelp]',sec).textContent='짝을 모두 맞히면 켤 수 있어요.';renderBoard();paintHL();syncW()}};}
 
 /* ═════════ 05 탐구 질문 — 문항마다 상황 그림 겸 간이 실험 ═════════ */
 const MIN_CHARS=20;
@@ -1741,7 +1989,7 @@ const QS=[
   model:'과학자들이 <mark>전자의 존재를 알기 전에</mark> 전류가 전지의 <mark>(+)극에서 (−)극 쪽으로 흐른다고 정했는데</mark>, 실제로 도선 속에서는 (−)전하를 띤 전자가 <mark>(−)극에서 (+)극 쪽으로 이동</mark>하기 때문이다. 전자의 이동 방향이 밝혀진 뒤에도 처음 정한 전류의 방향을 지금까지 그대로 쓰고 있다.'},
  {id:'q3',title:'전기 회로에서 전구에 불이 켜지는 과정을 물 흐름 모형에 비유하여 설명해 보자.',
   mini:{kind:'water',title:'펌프가 돌아가는 물 흐름 모형',guide:'펌프를 끄거나 밸브를 잠가 보고, 높이차와 물레방아가 어떻게 바뀌는지 보세요.'},
-  hint:'간이 실험에서 ‘펌프 끄기’와 ‘밸브 잠그기’를 눌러 보고 높이차와 물레방아를 보세요. ‘물 흐름 모형’ 화면의 ‘역할 연결하기’를 먼저 채워 두면 비유를 쓰기 쉬워요.',
+  hint:'간이 실험에서 ‘펌프 끄기’와 ‘밸브 잠그기’를 눌러 보고 높이차와 물레방아를 보세요. ‘물 흐름 모형’ 화면에서 ‘회로와 비교’를 눌러 짝 맞추기를 먼저 해 두면 비유를 쓰기 쉬워요.',
   model:'<mark>전지는 펌프</mark>처럼 <mark>전압(물의 높이차)</mark>을 유지해 <mark>전류(물의 흐름)</mark>가 계속 흐르게 하고, 물의 흐름이 물레방아를 돌리듯 전류가 <mark>전구</mark>를 지나면서 불을 켠다. 밸브가 열려 있어야 물레방아 쪽으로 물이 흐르듯 스위치가 닫혀 있어야 전류가 흐른다.'}];
 const qsec=document.createElement('section');qsec.dataset.view='questions';qsec.className='qwrap';qsec.setAttribute('aria-labelledby','h-questions');main.append(qsec);views.questions=qsec;
 qsec.innerHTML=`<div class="qhead"><h2 id="h-questions">탐구 질문</h2><span class="qprog" data-prog></span></div>
@@ -1868,9 +2116,9 @@ function theoryHTML(){return `
   <p>01 네온전구 · 풍선을 털가죽 위에서 좌우로 끌어 문지르고, 알루미늄 컵에 댄 뒤 네온전구를 컵에 대요. 조작판의 1·2·3 버튼도 같은 일을 해요.</p>
   <p>02 접시 전구 · 털가죽을 끌어 뒤집어 놓은 플라스틱 접시 위에서 좌우로 문지르고, 두 알루미늄 접시를 빨대로 잡아 플라스틱 접시와 털가죽 위에 올린 뒤 네온전구의 두 다리를 두 테두리에 대요. 네온전구는 다리 끝이 테두리에 가까이 가면 저절로 붙어요. 조작판의 1~3 버튼도 같은 일을 해요.</p>
   <p>03 회로 속 전자 · 스위치(S)를 닫고 여는 동안 도선과 확대 렌즈 속 전자를 보고, 전지 방향과 개수를 바꿔 봐요. 초록 고리를 끌면 렌즈가 보는 곳이 바뀌어요.</p>
-  <p>04 물 흐름 모형 · 펌프·밸브를 켜고 끄며 높이차와 물레방아를 보고, ‘역할 연결하기’를 채워요.</p>
+  <p>04 물 흐름 모형 · 펌프·밸브를 켜고 끄며 높이차와 물레방아를 보고, ‘회로와 비교’를 눌러 나란히 나타난 전기 회로와 역할이 비슷한 것끼리 카드로 짝을 맞춰요(끌어 놓거나 카드를 누른 뒤 칸을 눌러요).</p>
   <p>장면 아래 −·+·전체 단추로 장면을 확대해 볼 수 있어요. 확대한 뒤에는 빈 곳을 끌어 옮겨요.</p>
-  <p class="keys"><kbd>F</kbd>전체화면 <kbd>D</kbd>테마 <kbd>H</kbd>이론·도움말 <kbd>R</kbd>리포트 <kbd>C</kbd>결과 저장 <kbd>S</kbd>스위치 <kbd>Esc</kbd>닫기</p>
+  <p class="keys"><kbd>F</kbd>전체화면 <kbd>D</kbd>테마 <kbd>H</kbd>이론·도움말 <kbd>R</kbd>리포트 <kbd>C</kbd>결과 저장 <kbd>S</kbd>스위치 <kbd>V</kbd>회로와 비교(물 흐름 모형) <kbd>Esc</kbd>닫기</p>
   <p>전체화면에서 나가려면 Esc를 눌러요.</p></details>
  <details class="th-more"><summary>결과 저장과 학습 기록</summary>
   <p>실험대 오른쪽 위 ‘결과 저장’(카메라) 또는 C 키를 누르면 지금 장면과 조건·결과가 담긴 PNG 한 장이 기기의 다운로드 폴더(iPad는 저장 확인 창)로 저장돼요.</p>
@@ -1896,9 +2144,9 @@ $('#btnTheory').innerHTML=I.book;$('#btnTheory').addEventListener('click',()=>op
 
 /* ═════════ 데이터 초기화 · 학생 바꾸기 ═════════ */
 function confirmClear(kind){const student=kind==='student';if(drawer.open)drawer.close();
-  openDialog(student?'다음 학생으로 넘길까요?':'모든 데이터를 지울까요?',`<p>${student?'이 탭에 남은 앞 학생의 기록을 지우고 처음 화면으로 돌아가요.':'이 화면에 저장된 학습 기록을 모두 지워요.'} 지우는 항목: 학번·이름 · 처음 쓴 답안 · 모범 답안 잠금 · 다시 쓴 답안 · 힌트 열람 기록 · 역할 연결하기 선택. 잠긴 답안의 잠금도 함께 풀려요. 테마 설정은 그대로 남아요.</p><div class="dacts"><button class="btn" data-no>취소</button><button class="btn primary" data-yes>${student?'기록을 지우고 다음 학생으로':'모두 지우기'}</button></div>`,body=>{
+  openDialog(student?'다음 학생으로 넘길까요?':'모든 데이터를 지울까요?',`<p>${student?'이 탭에 남은 앞 학생의 기록을 지우고 처음 화면으로 돌아가요.':'이 화면에 저장된 학습 기록을 모두 지워요.'} 지우는 항목: 학번·이름 · 처음 쓴 답안 · 모범 답안 잠금 · 다시 쓴 답안 · 힌트 열람 기록 · 물 흐름 모형 짝 맞추기. 잠긴 답안의 잠금도 함께 풀려요. 테마 설정은 그대로 남아요.</p><div class="dacts"><button class="btn" data-no>취소</button><button class="btn primary" data-yes>${student?'기록을 지우고 다음 학생으로':'모두 지우기'}</button></div>`,body=>{
     $('[data-no]',body).onclick=closeDialog;$('[data-yes]',body).onclick=()=>{try{const prefix=`ssv-${LAB_ID}-`;for(const key of Object.keys(localStorage)){if(key.startsWith(prefix))localStorage.removeItem(key)}}catch(e){}for(const k of LKEYS){LS[k]={};store.del(k)}store.del('identity');store.del('asked');identity=null;store.persist=false;store.sid='';
-      closeDialog();renderAllQ();$$('[data-m]',views.water).forEach(s=>{s.value='';s.removeAttribute('data-ok')});$('[data-v="showMap"]',views.water).checked=false;$('[data-v="showMap"]',views.water).disabled=true;labs.water.s.showMap=false;$('[data-mmsg]',views.water).textContent='';
+      closeDialog();renderAllQ();waterCmp.clear();
       if(student){Object.values(labs).forEach(l=>l.reset());show('neon');toast('다음 학생이 시작할 수 있어요')}else toast('학습 기록을 모두 지웠어요')}})}
 
 /* ═════════ 학번·이름 (세션 1회) ═════════ */
@@ -1921,9 +2169,16 @@ const clean=x=>String(x??'').replace(/[\\/:*?"<>|\s\x00-\x1f\x7f-\x9f]/g,'');
 function stamp(){const d=new Date(),p=x=>String(x).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`}
 function ymd(d=new Date()){const p=x=>String(x).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`} /* 리포트 파일명 날짜: 기기 로컬 날짜(UTC 변환 금지) */
 const PROPS=['display','visibility','fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-linecap','stroke-linejoin','opacity','font-family','font-size','font-weight','font-variant-numeric','text-anchor','paint-order','stop-color','stop-opacity'];
-async function renderPNG(){const lab=labs[current],tab=TABS.find(t=>t.id===current),orig=lab.svg,clone=freezeSVG(orig),captured=lab.status();
+/* 비교 보기(04)는 물 흐름 모형과 전기 회로 두 장면을 이름표와 함께 나란히 한 장으로 */
+function pairSVG(svgs,tags){const H=450,gap=28,top=40,vbs=svgs.map(s=>s.getAttribute('viewBox').split(/\s+/).map(Number)),ws=vbs.map(v=>v[2]*H/v[3]),W=ws[0]+gap+ws[1];
+  const root=S('svg',{viewBox:`0 0 ${W} ${H+top}`,xmlns:NS}),css=getComputedStyle(document.documentElement);
+  svgs.forEach((s,i)=>{const c=freezeSVG(s),x=i?ws[0]+gap:0;c.setAttribute('x',x);c.setAttribute('y',top);c.setAttribute('width',ws[i]);c.setAttribute('height',H);root.append(c);
+    const t=S('text',{x:x+14,y:28,style:`font:800 20px ${css.getPropertyValue('--font-ui')};fill:${css.getPropertyValue('--accent').trim()}`},root);t.textContent=tags[i]});
+  S('path',{d:`M${ws[0]+gap/2},${top+10}V${H+top-10}`,style:`stroke:${css.getPropertyValue('--line-2').trim()};stroke-width:1.5`},root);return root}
+async function renderPNG(){const lab=labs[current],tab=TABS.find(t=>t.id===current),pair=current==='water'&&waterCmp.on(),orig=lab.svg,clone=pair?pairSVG([orig,waterCmp.twin().svg],['물 흐름 모형','전기 회로']):freezeSVG(orig),captured={...lab.status()};
   $$('.focus-ring',clone).forEach(n=>n.remove());
-  const box=orig.getBoundingClientRect(),W=clamp(Math.round(box.width*2),1200,2400),H=Math.round(W*box.height/box.width),k=W/1400,band=Math.round(180*k);
+  if(pair){const r=waterCmp.twin().state();captured.state+=` · 회로: 전지 ${r.on?'연결':'빠짐'} · 스위치 ${r.closed?'닫힘':'열림'} · 전구 ${r.lit?'켜짐':'꺼짐'} · 짝 맞추기 ${waterCmp.score()}/5`}
+  const box=orig.getBoundingClientRect(),vbp=pair&&clone.getAttribute('viewBox').split(' ').map(Number),W=pair?2400:clamp(Math.round(box.width*2),1200,2400),H=Math.round(pair?W*vbp[3]/vbp[2]:W*box.height/box.width),k=W/1400,band=Math.round(180*k);
   clone.setAttribute('width',W);clone.setAttribute('height',H);clone.setAttribute('xmlns',NS);
   const css=getComputedStyle(document.documentElement),tok=n=>css.getPropertyValue(n).trim();
   const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml;charset=utf-8'})),img=new Image();
@@ -1988,7 +2243,8 @@ document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return
   if(dlg.open)return;const k=e.key.toLowerCase();
   if(k==='f'){e.preventDefault();toggleFull()}else if(k==='d'){e.preventDefault();toggleTheme()}else if(k==='h'){e.preventDefault();drawer.open?drawer.close():openTheory('#th-help')}
   else if(k==='r'){e.preventDefault();openReport()}else if(k==='c'&&current!=='questions'){e.preventDefault();saveResult()}
-  else if(k==='s'&&current==='circuit'){e.preventDefault();$('[data-switch]',views.circuit).click()}});
+  else if(k==='s'&&current==='circuit'){e.preventDefault();$('[data-switch]',views.circuit).click()}
+  else if(k==='v'&&current==='water'){e.preventDefault();waterCmp.toggle()}});
 document.querySelector('meta[name=version]').content=APP_VERSION;
 
 
