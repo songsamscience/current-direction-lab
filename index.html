@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<meta name="version" content="3.10">
+<meta name="version" content="3.11">
 <meta name="description" content="마찰 전기로 네온전구를 켜 보고, 전기 회로 속 전자의 이동 방향과 전류의 방향을 비교하는 가상실험실">
 <meta property="og:title" content="송쌤과학 가상실험실 | 전하와 전류의 이동 방향">
 <meta property="og:description" content="네온전구 · 전기 회로 속 전자 · 물 흐름 모형으로 전류와 전압을 알아보는 가상실험실">
@@ -521,7 +521,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 <script>
 'use strict';
 /* ═════════ 기본 도구 ═════════ */
-const APP_VERSION='3.10', APP_DATE='2026-10-27', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
+const APP_VERSION='3.11', APP_DATE='2026-10-27', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
 const NS='http://www.w3.org/2000/svg';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mod=(a,n)=>((a%n)+n)%n;
@@ -569,7 +569,15 @@ const Ticker={items:new Set(),raf:0,last:0,
 /* ═════════ ① 전기 회로 — 전자의 이동 방향과 전류의 방향 ═════════
    추상 격자(1 유닛 = 화면 도해 단위). 도선 경로를 따라 전자가 표류(drift)하고, 그 위에 불규칙한 열운동이 겹친다.
    교육용 모델: 표류 속도는 보기 쉽게 크게 키웠다(실제는 1초에 1 mm보다 훨씬 느림). 전구 밝기는 전압에 따른 정성적 표현. */
-const CX=500,CY=280,LENS={wire:{x:370,y:252,r:80},fil:{x:690,y:252,r:80}},FIL_AT=[500,392];
+const CX=500,CY=280,LENS={wire:{x:370,y:252,r:80},fil:{x:690,y:252,r:80}},FIL_AT=[500,392],WIRE_R=36;
+/* a→p→b에서 꺾인 점 p를 반지름 R의 호로 둥글게 — 접점까지 거리 t, 중심 (cx,cy), 반지름 r, 시작각 a0, 도는 방향 s, 꺾인 각 th.
+   전자가 다니는 길(roundCorners)과 도선 그림(png-layer의 tube)이 같은 호를 쓴다 */
+function cornerArc(a,p,b,R){const l1=Math.hypot(p[0]-a[0],p[1]-a[1]),l2=Math.hypot(b[0]-p[0],b[1]-p[1]),ux=(p[0]-a[0])/l1,uy=(p[1]-a[1])/l1,vx=(b[0]-p[0])/l2,vy=(b[1]-p[1])/l2;
+  const th=Math.acos(clamp(ux*vx+uy*vy,-1,1));if(th<1e-3)return null;
+  const s=Math.sign(ux*vy-uy*vx),t=Math.min(R*Math.tan(th/2),l1/2,l2/2),r=t/Math.tan(th/2),tx=p[0]-ux*t,ty=p[1]-uy*t,cx=tx-s*uy*r,cy=ty+s*ux*r;
+  return{t,r,cx,cy,s,th,a0:Math.atan2(ty-cy,tx-cx)}}
+function roundCorners(pts,idx,R,n=8){return pts.flatMap((p,i)=>{const A=idx.includes(i)&&cornerArc(pts[i-1],p,pts[i+1],R);if(!A)return[p];
+  const q=[];for(let k=0;k<=n;k++){const a=A.a0+A.s*A.th*k/n;q.push([A.cx+A.r*Math.cos(a),A.cy+A.r*Math.sin(a)])}return q})}
 class CircuitLab{
   constructor(host,o={}){
     this.o=Object.assign({id:uid('c'),compact:false,closed:false,vb:[0,0,1000,560],seed:11},o);
@@ -690,11 +698,14 @@ class CircuitLab{
   wireS(s,k=0){const [a,b]=this.bulbS;s=mod(s,this.L);if(s<=a||s>=b)return s;return k>0||(!k&&b-s<s-a)?b+2:a-2}
   layout(){
     const n=this.s.cells,y0=280-n*50,y1=280+n*50,r=this.s.reversed,P=this.o.id;
-    const pts=[[150,y1],[150,450],[470,450],[490,438],[488,391],[512,391],[500,451],[530,450],[850,450],[850,110],[540,110],[460,110],[150,110],[150,y0]];
+    // 회로의 네 모서리는 도선 그림처럼 반지름 WIRE_R로 둥글게 — 전자도 굽은 도선 가운데를 따라간다
+    const pts=roundCorners([[150,y1],[150,450],[470,450],[490,438],[488,391],[512,391],[500,451],[530,450],[850,450],[850,110],[540,110],[460,110],[150,110],[150,y0]],[1,8,9,12],WIRE_R);
     this.segs=[];let c=0;
     for(let i=0;i<pts.length-1;i++){const [xa,ya]=pts[i],[xb,yb]=pts[i+1],len=Math.hypot(xb-xa,yb-ya);this.segs.push({x0:xa,y0:ya,dx:(xb-xa)/len,dy:(yb-ya)/len,len,c0:c});c+=len}
-    this.L=c;this.bladeSeg=10;this.bulbS=[this.segs[2].c0,this.segs[7].c0];
-    const d=[`M150,${y1}V450H470`,`M530,450H850V110H548`,`M452,110H150V${y0}`];
+    const at=(x,y)=>pts.findIndex(q=>q[0]===x&&q[1]===y);
+    this.L=c;this.bladeSeg=at(540,110);this.bulbI=[at(470,450),at(530,450)];this.bulbS=this.bulbI.map(i=>this.segs[i].c0);
+    const pl=(q,idx)=>'M'+roundCorners(q,idx,WIRE_R).map(v=>v.map(z=>+z.toFixed(1)).join(',')).join('L');
+    const d=[pl([[150,y1],[150,450],[470,450]],[1]),pl([[530,450],[850,450],[850,110],[548,110]],[1,2]),pl([[452,110],[150,110],[150,y0]],[1])];
     this.wires.forEach((ps,i)=>ps.forEach(p=>p.setAttribute('d',d[i])));
     const N=Math.round(this.L/20);
     while(this.es.length<N)this.es.push({g:eG(this.le_),s:0,ja:0,jn:0,va:0,vn:0,tc:0});
@@ -751,7 +762,7 @@ class CircuitLab{
     this.bladeG.setAttribute('transform',`rotate(${(-38*this.blade).toFixed(2)} 460 110)`);
     if(this.sw._c!==this.s.closed){this.sw._c=this.s.closed;this.sw.setAttribute('aria-label',`스위치 — 지금 ${this.s.closed?'닫힘':'열림'}. 누르면 ${this.s.closed?'열어요':'닫아요'}`)}
     const L=this.L;
-    for(const e of this.es){const p=this.pointAt(e.s),jn=p.i>=2&&p.i<=6?e.jn*.3:e.jn,x=p.x+p.tx*e.ja-p.ty*jn,y=p.y+p.ty*e.ja+p.tx*jn;place(e.g,x,y);e.g.setAttribute('opacity',Math.min(1,e.s/14,(L-e.s)/14).toFixed(2))}
+    for(const e of this.es){const p=this.pointAt(e.s),jn=p.i>=this.bulbI[0]&&p.i<this.bulbI[1]?e.jn*.3:e.jn,x=p.x+p.tx*e.ja-p.ty*jn,y=p.y+p.ty*e.ja+p.tx*jn;place(e.g,x,y);e.g.setAttribute('opacity',Math.min(1,e.s/14,(L-e.s)/14).toFixed(2))}
     const cond=this.conducting(),b=cond?Math.min(1,.55*this.s.cells):0;
     this.glow.setAttribute('opacity',b.toFixed(2));this.glow.setAttribute('r',(44+36*b).toFixed(1));
     this.core.setAttribute('opacity',(b*.9).toFixed(2));this.fil.style.stroke=b?'var(--glow)':'var(--metal-mid)';
@@ -1443,7 +1454,23 @@ function sprite(p,k,x,y,w,h,crop){
 }
 function hideExcept(p,keep){[...p.children].forEach(e=>{if(!keep.includes(e)&&!e.classList.contains('focus-ring')&&e.getAttribute('fill-opacity')!=='0')e.style.display='none'})}
 function firstSprite(p,...args){const q=sprite(p,...args);p.insertBefore(q,p.firstChild);return q}
-function tube(p,k,pts,thick){for(let i=1;i<pts.length;i++){const [x,y]=pts[i-1],[xx,yy]=pts[i],l=Math.hypot(xx-x,yy-y);const g=S('g',{transform:`translate(${x} ${y}) rotate(${Math.atan2(yy-y,xx-x)*180/Math.PI})`},p);sprite(g,k,-thick*.15,-thick/2,l+thick*.3,thick)}}
+/* 구리 도선 — 경로 pts를 굵기 thick로. R>0이면 꺾인 곳을 반지름 R의 호로 굽힌다(labs.js cornerArc와 같은 호).
+   양 끝이 둥근 구리관 그림에서 몸통(b)·얇은 조각(s)·양 끝 마개(c0·c1)를 잘라 <defs>에 한 번 넣고 <use>로 늘여 붙인다:
+   직선 = 몸통, 굽은 곳 = 얇은 조각을 호를 따라 촘촘히, 둥근 마개는 경로 양 끝에만(모서리에서 마개끼리 겹쳐 끊겨 보이지 않게) */
+function wireParts(svg,k){const c=svg._wire||(svg._wire={});if(c[k])return c[k];
+  const a=PNG_ASSETS[k],[x0,y0,w,h]=a.crop,cw=Math.round(h*.62),id=uid('w'),d=S('defs',null,svg);
+  for(const [n,cr,x] of [['b',[x0+cw,y0,w-2*cw,h],0],['s',[x0+w/2-h*.2,y0,h*.4,h],-.5],['c0',[x0,y0,cw,h],0],['c1',[x0+w-cw,y0,cw,h],0]])sprite(S('g',{id:`${id}-${n}`},d),k,x,-.5,1,1,cr);
+  return c[k]={id,cap:cw/h}}
+function tube(p,k,pts,thick,R=0){const W=wireParts(p.ownerSVGElement||p,k),f=v=>v.toFixed(2),m=pts.length,ext=thick*.15,cap=thick*W.cap;
+  const put=(n,x,y,deg,len)=>S('use',{transform:`translate(${f(x)} ${f(y)}) rotate(${f(deg)}) scale(${f(len)} ${thick})`},p).setAttributeNS('http://www.w3.org/1999/xlink','xlink:href',`#${W.id}-${n}`);
+  const arcs=pts.map((q,i)=>R&&i&&i<m-1?cornerArc(pts[i-1],q,pts[i+1],R):null);
+  for(let i=1;i<m;i++){const [x,y]=pts[i-1],[xx,yy]=pts[i],l=Math.hypot(xx-x,yy-y),ux=(xx-x)/l,uy=(yy-y)/l,deg=Math.atan2(uy,ux)*180/Math.PI;
+    let s0=arcs[i-1]?arcs[i-1].t:0,s1=l-(arcs[i]?arcs[i].t:0);
+    if(i===1){put('c0',x-ux*ext,y-uy*ext,deg,cap);s0=cap-ext-.5}
+    if(i===m-1){put('c1',xx+ux*(ext-cap),yy+uy*(ext-cap),deg,cap);s1=l+ext-cap+.5}
+    if(s1>s0)put('b',x+ux*s0,y+uy*s0,deg,s1-s0+.6)}
+  for(const A of arcs){if(!A)continue;const n=Math.max(3,Math.ceil(A.th*(A.r+thick/2)/2.5)),len=(A.r+thick/2)*A.th/n+.8;
+    for(let j=0;j<n;j++){const a=A.a0+A.s*A.th*(j+.5)/n;put('s',A.cx+A.r*Math.cos(a),A.cy+A.r*Math.sin(a),a*180/Math.PI+A.s*90,len)}}}
 const cb=CircuitLab.prototype.build,cl=CircuitLab.prototype.layout;
 CircuitLab.prototype.build=function(){cb.call(this);
  const bases=this.svg.querySelector('[data-asset="bases"]');bases.innerHTML='';sprite(bases,'plinth',424,452,152,34);
@@ -1457,7 +1484,7 @@ CircuitLab.prototype.build=function(){cb.call(this);
 };
 const cd=CircuitLab.prototype.draw;CircuitLab.prototype.draw=function(){cd.call(this);if(this.bulbPNG)this.bulbPNG.style.filter=this.conducting()?'none':'grayscale(1) brightness(.85)'};
 CircuitLab.prototype.layout=function(){cl.call(this);const n=this.s.cells,y0=280-n*50,y1=280+n*50;
- this.pngWires.innerHTML='';tube(this.pngWires,'wire',[[150,y1],[150,450],[470,450]],30);tube(this.pngWires,'wire',[[530,450],[850,450],[850,110],[548,110]],30);tube(this.pngWires,'wire',[[460,110],[150,110],[150,y0]],30);
+ this.pngWires.innerHTML='';tube(this.pngWires,'wire',[[150,y1],[150,450],[470,450]],30,WIRE_R);tube(this.pngWires,'wire',[[530,450],[850,450],[850,110],[548,110]],30,WIRE_R);tube(this.pngWires,'wire',[[460,110],[150,110],[150,y0]],30,WIRE_R);
  tube(this.pngWires,'wire',[[470,450],[490,438]],9);tube(this.pngWires,'wire',[[530,450],[500,451]],9);
  this.batInner.innerHTML='';for(let i=0;i<n;i++){const u=y0+i*100,rv=this.s.reversed,g=S('g',{transform:rv?`rotate(180 150 ${u+50})`:''},this.batInner);sprite(g,'battery',124,u,52,100);T(this.batInner,150,rv?u+48:u+60,'1.5 V','small nostroke',{'text-anchor':'middle',style:'fill:var(--cell-cap);font-weight:800'});T(this.batInner,150,rv?u+82:u+26,'+','nostroke',{'text-anchor':'middle',style:'fill:var(--cell-cap);font-weight:800'});}S('rect',{class:'focus-ring',x:110,y:y0-12,width:80,height:n*100+24,rx:10},this.batInner);S('rect',{x:110,y:y0-12,width:80,height:n*100+24,fill:'#ffffff','fill-opacity':0,'pointer-events':'all','data-hit':'battery'},this.batInner);
 };
@@ -1608,8 +1635,8 @@ class CircuitTwin{
     S('defs',null,sv).innerHTML=`<radialGradient id="${P}-glow"><stop offset="0" style="stop-color:var(--glow);stop-opacity:.95"/><stop offset=".42" style="stop-color:var(--glow);stop-opacity:.34"/><stop offset="1" style="stop-color:var(--glow);stop-opacity:0"/></radialGradient>`;
     const g=S('g',null,sv);
     // 도선(전지 자리는 비워 둔다)
-    tube(g,'wire',[[800,250],[800,120],[222,120],[222,445],[348,445]],12);
-    tube(g,'wire',[[428,445],[462,445]],12);tube(g,'wire',[[566,445],[800,445],[800,350]],12);
+    tube(g,'wire',[[800,250],[800,120],[222,120],[222,445],[348,445]],12,9);
+    tube(g,'wire',[[428,445],[462,445]],12);tube(g,'wire',[[566,445],[800,445],[800,350]],12,9);
     // 전압 표시(전지 옆, 회로 안쪽)
     this.vG=S('g',null,g);
     this.vArr=S('path',{d:'M752,250V350M746,258L752,250L758,258M746,342L752,350L758,342',fill:'none',style:'stroke:var(--text-1)','stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round'},this.vG);
