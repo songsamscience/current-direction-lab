@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<meta name="version" content="3.9">
+<meta name="version" content="3.10">
 <meta name="description" content="마찰 전기로 네온전구를 켜 보고, 전기 회로 속 전자의 이동 방향과 전류의 방향을 비교하는 가상실험실">
 <meta property="og:title" content="송쌤과학 가상실험실 | 전하와 전류의 이동 방향">
 <meta property="og:description" content="네온전구 · 전기 회로 속 전자 · 물 흐름 모형으로 전류와 전압을 알아보는 가상실험실">
@@ -521,7 +521,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 <script>
 'use strict';
 /* ═════════ 기본 도구 ═════════ */
-const APP_VERSION='3.9', APP_DATE='2026-10-26', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
+const APP_VERSION='3.10', APP_DATE='2026-10-27', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
 const NS='http://www.w3.org/2000/svg';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mod=(a,n)=>((a%n)+n)%n;
@@ -569,11 +569,11 @@ const Ticker={items:new Set(),raf:0,last:0,
 /* ═════════ ① 전기 회로 — 전자의 이동 방향과 전류의 방향 ═════════
    추상 격자(1 유닛 = 화면 도해 단위). 도선 경로를 따라 전자가 표류(drift)하고, 그 위에 불규칙한 열운동이 겹친다.
    교육용 모델: 표류 속도는 보기 쉽게 크게 키웠다(실제는 1초에 1 mm보다 훨씬 느림). 전구 밝기는 전압에 따른 정성적 표현. */
-const CX=500,CY=280,LENS={wire:{x:370,y:250,r:76},fil:{x:690,y:250,r:76}},FIL_AT=[500,392];
+const CX=500,CY=280,LENS={wire:{x:370,y:252,r:80},fil:{x:690,y:252,r:80}},FIL_AT=[500,392];
 class CircuitLab{
   constructor(host,o={}){
     this.o=Object.assign({id:uid('c'),compact:false,closed:false,vb:[0,0,1000,560],seed:11},o);
-    this.svg=makeScene(host,{vb:this.o.vb,title:'전기 회로 속 전자의 이동',desc:'전지·스위치·전구를 도선으로 연결한 회로. 파란 점은 전자, 주황 화살표는 전류의 방향, 파란 꺾쇠 화살표는 전자의 이동 방향이다.'});
+    this.svg=makeScene(host,{vb:this.o.vb,title:'전기 회로 속 전자의 이동',desc:'전지·스위치·전구를 도선으로 연결한 회로와, 도선과 전구 필라멘트를 같은 배율의 원자핵(+)·전자(−) 모형으로 확대한 렌즈 두 개. 파란 점은 전자, 주황 화살표는 전류의 방향, 파란 꺾쇠 화살표는 전자의 이동 방향이다.'});
     this.rand=mulberry(this.o.seed);this.build();this.reset();Ticker.add(this);
   }
   reset(){const c=this.o.compact;
@@ -598,7 +598,7 @@ class CircuitLab{
     S('rect',{x:424,y:452,width:152,height:34,rx:5,fill:`url(#${P}-wood)`},base);
     // 도선 3토막(전지 → 전구 / 전구 → 스위치 / 스위치 → 전지)
     const lw=S('g',null,sv);
-    this.wires=[0,1,2].map(()=>[S('path',{class:'f-wire-lo','stroke-width':24},lw),S('path',{class:'f-wire','stroke-width':18},lw),S('path',{class:'f-wire-hi','stroke-width':4},lw)]);
+    this.wires=[0,1,2].map(()=>[S('path',{class:'f-wire-lo','stroke-width':32},lw),S('path',{class:'f-wire','stroke-width':26},lw),S('path',{class:'f-wire-hi','stroke-width':5},lw)]);
     // 전구
     const bulb=S('g',{'data-asset':'bulb'},sv);
     this.glow=S('circle',{cx:500,cy:404,r:60,fill:`url(#${P}-glow)`,opacity:0},bulb);
@@ -644,6 +644,9 @@ class CircuitLab{
     this.lensG=S('g',null,sv);
     this.lens={wire:this.makeLens('wire'),fil:this.makeLens('fil')};
     S('circle',{cx:FIL_AT[0],cy:FIL_AT[1],r:13,fill:'none',style:'stroke:var(--accent)','stroke-width':2.5,'stroke-dasharray':'4 3','pointer-events':'none'},this.lensG);
+    // 렌즈 속 기호 풀이(두 렌즈 사이 위쪽 한 줄): 원자핵(+) · 전자(−)
+    const key=S('g',{class:'wide-only','pointer-events':'none'},this.lensG);
+    place(pG(key,8),476,189);T(key,488,194,'원자핵','small');place(eG(key,5.5),560,189);T(key,572,194,'전자','small');
     this.ring=S('g',{class:'grab',tabindex:0,role:'button','aria-label':'도선 확대 렌즈 위치 — 끌거나 방향키로 도선을 따라 옮겨요'},this.lensG);
     S('circle',{r:22,fill:'#ffffff','fill-opacity':0},this.ring);S('circle',{r:15,fill:'none',style:'stroke:var(--accent)','stroke-width':3},this.ring);S('circle',{class:'focus-ring',r:21},this.ring);
     dragify(this.ring,sv,{move:p=>{this.lensF=this.wireS(this.nearestS(p.x,p.y))/this.L;this.draw()}});
@@ -656,9 +659,10 @@ class CircuitLab{
     this.batHi=S('rect',{x:112,y:0,width:76,height:0,rx:10,fill:'none',style:'stroke:var(--accent)','stroke-width':3,opacity:0},sv);
     if(this.o.compact){this.gates.style.display='none';this.lensG.style.display='none'}
   }
-  /* 확대 렌즈 하나. 도선은 굵고 원자 사이가 넓어 전자가 덜 부딪히고(저항 작음),
-     필라멘트는 가늘고 원자가 촘촘해 자주 부딪힌다(저항 큼). 전류가 흐를 때 부딪힌 원자가 반짝이고 필라멘트가 달아오른다 */
-  makeLens(kind){const P=this.o.id,C=LENS[kind],fil=kind==='fil',hh=fil?16:36,ir=fil?5:8,er=fil?4:5.5,Z={kind,C,hh,ir,er,hit:fil?.55:.1,ions:[],le:[]};
+  /* 확대 렌즈 하나 — 원자핵(+)과 전자(−) 모형. 두 렌즈는 같은 배율이라 원자핵·전자 크기가 같고 굵기와 원자 배열만 다르다.
+     도선은 굵고(원자핵 3줄) 원자 사이가 넓어 전자가 덜 부딪히고(저항 작음), 필라멘트는 가늘고(1줄) 원자가 촘촘해 자주 부딪힌다(저항 큼).
+     전류가 흐를 때 부딪힌 원자핵 둘레가 반짝이고 필라멘트가 달아오른다 */
+  makeLens(kind){const P=this.o.id,C=LENS[kind],fil=kind==='fil',hh=fil?18:40,ir=8,er=5.5,Z={kind,C,hh,ir,er,hit:fil?.6:.07,ions:[],le:[]};
     Z.lead=[0,1].map(()=>S('line',{class:'leader','stroke-width':1.5},this.lensG));
     const lens=S('g',{transform:`translate(${C.x} ${C.y})`},this.lensG);
     S('circle',{r:C.r,style:'fill:var(--stage-2)'},lens);
@@ -666,9 +670,9 @@ class CircuitLab{
     S('rect',{x:-100,y:-hh,width:200,height:2*hh,style:`fill:var(--wire);fill-opacity:${fil?.34:.22}`},inner);
     Z.heat=S('rect',{x:-100,y:-hh,width:200,height:2*hh,style:'fill:var(--glow)',opacity:0},inner);
     S('path',{d:`M-100,${-hh}H100M-100,${hh}H100`,style:'stroke:var(--wire);stroke-opacity:.8','stroke-width':2},inner);
-    const grid=fil?[-8,8].flatMap((y,j)=>[-90,-72,-54,-36,-18,0,18,36,54,72,90].map(x=>[x+(j?9:0),y])):[-20,0,20].flatMap(y=>[-70,-42,-14,14,42,70].map(x=>[x,y]));
-    for(const [x,y] of grid){const sp=S('circle',{cx:x,cy:y,r:ir+3,fill:'none',style:'stroke:var(--glow)','stroke-width':2.5,opacity:0},inner);Z.ions.push({g:pG(inner,ir),sp,x,y,ph:this.rand()*6.28,hot:0})}
-    const n=fil?10:12,ym=hh-er-1;for(let i=0;i<n;i++)Z.le.push({g:eG(inner,er),x:-90+i*180/n+this.rand()*8,y:(this.rand()-.5)*2*ym,vx:0,vy:0,tc:0,cd:0});
+    const grid=fil?[-95,-76,-57,-38,-19,0,19,38,57,76,95].map(x=>[x,0]):[-24,0,24].flatMap((y,j)=>[-90,-60,-30,0,30,60,90].map(x=>[x+(j===1?15:0),y]));
+    for(const [x,y] of grid){const sp=S('circle',{cx:x,cy:y,r:ir+3.5,fill:'none',style:'stroke:var(--glow)','stroke-width':2.5,opacity:0},inner);Z.ions.push({g:pG(inner,ir),sp,x,y,ph:this.rand()*6.28,hot:0})}
+    const n=fil?8:14,ym=hh-er-1;for(let i=0;i<n;i++)Z.le.push({g:eG(inner,er),x:-90+i*180/n+this.rand()*8,y:(this.rand()-.5)*2*ym,vx:0,vy:0,tc:0,cd:0});
     Z.arrE=eArrow(inner);place(Z.arrE,8,-52);Z.arrI=curArrow(inner);place(Z.arrI,-8,54,180);
     Z.txtE=T(inner,-22,-47,'전자','t-neg small',{'text-anchor':'end'});Z.txtI=T(inner,22,59,'전류','t-cur small');
     S('circle',{r:C.r,fill:'none',style:'stroke:var(--metal-mid)','stroke-width':5},lens);
@@ -705,7 +709,7 @@ class CircuitLab{
     this.bat.setAttribute('aria-label',`전지 방향 바꾸기 — 지금 (+)극이 ${r?'아래':'위'}`);
     this.batHi.setAttribute('y',y0-12);this.batHi.setAttribute('height',n*100+24);
     const top=r?this.tMinus:this.tPlus,bot=r?this.tPlus:this.tMinus;top.setAttribute('x',118);top.setAttribute('y',y0+6);bot.setAttribute('x',118);bot.setAttribute('y',y1+6);
-    this.tV.textContent=`전압 ${this.volts().toFixed(1)} V`;
+    this.tV.textContent='';S('tspan',{class:'wide-only'},this.tV).textContent='전압 ';this.tV.append(`${this.volts().toFixed(1)} V`); // 좁은 화면에서는 렌즈와 겹치지 않게 숫자만
     this.count={A:0,B:0};this.sA=this.nearestS(380,450);this.sB=this.nearestS(620,450);
     this.anch=[[290,110],[710,110],[850,280],[740,450]].map(([x,y])=>this.nearestS(x,y));
     if(this.lensF==null)this.lensF=this.nearestS(260,450)/this.L;
@@ -731,7 +735,7 @@ class CircuitLab{
       if(d){if(this.crossed(old,d,this.sA))this.count.A++;if(this.crossed(old,d,this.sB))this.count.B++}
       e.tc-=dt;if(e.tc<=0){const a=rnd()*6.283,sp=16+rnd()*22;e.va=Math.cos(a)*sp;e.vn=Math.sin(a)*sp;e.tc=.1+rnd()*.28}
       e.ja+=e.va*dt;e.jn+=e.vn*dt;
-      if(Math.abs(e.ja)>7){e.ja=Math.sign(e.ja)*7;e.va*=-1}if(Math.abs(e.jn)>5.5){e.jn=Math.sign(e.jn)*5.5;e.vn*=-1}
+      if(Math.abs(e.ja)>7){e.ja=Math.sign(e.ja)*7;e.va*=-1}if(Math.abs(e.jn)>9){e.jn=Math.sign(e.jn)*9;e.vn*=-1}
     }
     const vd=cond?this.dir()*30*this.s.cells:0;
     for(const Z of Object.values(this.lens)){const ym=Z.hh-Z.er-1,rc=Z.ir+Z.er;
@@ -785,7 +789,7 @@ class CircuitLab{
     let ex=!s.closed?'스위치를 닫으면 전기장 변화가 빠르게 전달되어 도선에 있던 전자들이 평균적으로 한 방향으로 이동해요.'
       :'전류의 방향(주황 화살표)은 (+)극에서 나와 (−)극으로 들어가는 쪽으로, 전자의 이동 방향(파란 화살표)과 반대예요.';
     if(cond&&s.cells===2)ex+=' 같은 방향으로 직렬 연결한 전지 2개가 더 큰 전압을 만들어요. 이 모형에서는 더 큰 전류와 밝기를 보여 줘요.';
-    else if(cond&&s.showLens&&!this.o.compact)ex+=' 두 렌즈를 비교해 봐요. 필라멘트는 도선보다 가늘어 전자가 원자와 더 자주 부딪혀요(저항이 커요). 이때 열이 나서 필라멘트가 빛을 내요.';
+    else if(cond&&s.showLens&&!this.o.compact)ex+=' 두 렌즈를 비교해 봐요. 필라멘트는 도선보다 가늘고 원자핵이 촘촘해, 움직이는 전자가 원자와 더 자주 부딪혀요(저항이 커요). 이때 열이 나서 필라멘트가 빛을 내요.';
     return{obs,ex,cond:`전지 ${s.cells}개(${V} V) · (+)극이 ${s.reversed?'아래':'위'} · 스위치 ${s.closed?'닫힘':'열림'}`,
       state:`전류 ${cond?'흐름':'흐르지 않음'} · 전구 ${cond?'켜짐':'꺼짐'} · 전자: (−)극 → (+)극 쪽 · 외부 회로 전류: (+)극 → (−)극 쪽${s.showGates&&!this.o.compact?` · 지나간 전자 A ${this.count.A}개, B ${this.count.B}개`:''}`};
   }
@@ -1453,8 +1457,8 @@ CircuitLab.prototype.build=function(){cb.call(this);
 };
 const cd=CircuitLab.prototype.draw;CircuitLab.prototype.draw=function(){cd.call(this);if(this.bulbPNG)this.bulbPNG.style.filter=this.conducting()?'none':'grayscale(1) brightness(.85)'};
 CircuitLab.prototype.layout=function(){cl.call(this);const n=this.s.cells,y0=280-n*50,y1=280+n*50;
- this.pngWires.innerHTML='';tube(this.pngWires,'wire',[[150,y1],[150,450],[470,450]],22);tube(this.pngWires,'wire',[[530,450],[850,450],[850,110],[548,110]],22);tube(this.pngWires,'wire',[[460,110],[150,110],[150,y0]],22);
- tube(this.pngWires,'wire',[[470,450],[490,438]],7);tube(this.pngWires,'wire',[[530,450],[500,451]],7);
+ this.pngWires.innerHTML='';tube(this.pngWires,'wire',[[150,y1],[150,450],[470,450]],30);tube(this.pngWires,'wire',[[530,450],[850,450],[850,110],[548,110]],30);tube(this.pngWires,'wire',[[460,110],[150,110],[150,y0]],30);
+ tube(this.pngWires,'wire',[[470,450],[490,438]],9);tube(this.pngWires,'wire',[[530,450],[500,451]],9);
  this.batInner.innerHTML='';for(let i=0;i<n;i++){const u=y0+i*100,rv=this.s.reversed,g=S('g',{transform:rv?`rotate(180 150 ${u+50})`:''},this.batInner);sprite(g,'battery',124,u,52,100);T(this.batInner,150,rv?u+48:u+60,'1.5 V','small nostroke',{'text-anchor':'middle',style:'fill:var(--cell-cap);font-weight:800'});T(this.batInner,150,rv?u+82:u+26,'+','nostroke',{'text-anchor':'middle',style:'fill:var(--cell-cap);font-weight:800'});}S('rect',{class:'focus-ring',x:110,y:y0-12,width:80,height:n*100+24,rx:10},this.batInner);S('rect',{x:110,y:y0-12,width:80,height:n*100+24,fill:'#ffffff','fill-opacity':0,'pointer-events':'all','data-hit':'battery'},this.batInner);
 };
 const nb=NeonLab.prototype.build;
@@ -1751,6 +1755,7 @@ function labShell(t,legend,meterHTML,panelHTML){
 }
 const LEG_E=`<span><svg viewBox="-8 -8 16 16"><circle r="6" class="e-dot"/><path d="M-3,0H3" class="e-sign" stroke-width="1.8" style="stroke:var(--surface-1)"/></svg>전자(−)</span>`;
 const LEG_P=`<span><svg viewBox="-8 -8 16 16"><circle r="7" class="p-dot"/><path d="M-3.5,0H3.5M0,-3.5V3.5" stroke-width="1.8" style="stroke:var(--surface-1)"/></svg>양전하 중심(+)</span>`;
+const LEG_N=LEG_P.replace('양전하 중심(+)','원자핵(+)'); // 03 확대 렌즈는 원자핵·전자 모형
 const LEG_X=`<span><svg viewBox="-9 -9 18 18"><circle r="4.5" class="e-dot"/><circle r="7.5" class="x-ring"/></svg>옮겨 온 전자</span>`;
 const LEG_H=`<span><svg viewBox="-9 -9 18 18"><circle r="7.5" class="h-ring"/></svg>전자를 잃은 자리</span>`;
 const LEG_I=`<span><svg viewBox="-16 -9 32 18"><path d="M-12,0H3" stroke-width="3.5" style="stroke:var(--cur)"/><path d="M1,-6L11,0L1,6Z" style="fill:var(--cur)"/></svg>전류의 방향</span>`;
@@ -1853,7 +1858,7 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
 
 /* ── 03 회로 속 전자 ── */
 {const t=TABS.find(x=>x.id==='circuit');
- const sec=labShell(t,LEG_P+LEG_E+LEG_I,`<span class="opt">전압 <b data-mv>1.5</b> V</span><span class="sep opt">·</span>전류 <b data-mi>흐르지 않음</b>`,
+ const sec=labShell(t,LEG_N+LEG_E+LEG_I,`<span class="opt">전압 <b data-mv>1.5</b> V</span><span class="sep opt">·</span>전류 <b data-mi>흐르지 않음</b>`,
  `<div class="panel-scroll">
    <section class="pg"><h3 class="pg-title">전지</h3>
     <span class="field-label" id="cellsL">전지 개수</span>
@@ -1861,7 +1866,7 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
     <button class="btn wide" data-flip style="margin-top:8px">${I.flip}전지 방향 바꾸기</button>
     <p class="help">장면의 전지나 스위치를 직접 눌러도 돼요.</p></section>
    <section class="pg"><h3 class="pg-title">보기</h3><div class="toggles">${tg('showE','전자 이동 방향',true,'var(--neg)')}${tg('showI','전류의 방향',true,'var(--cur)')}${tg('showLens','확대 렌즈',true)}${tg('showGates','지나간 전자 수',true)}</div>
-    <p class="help">왼쪽 렌즈는 도선, 오른쪽 렌즈는 전구의 필라멘트를 같은 배율로 확대해요. 초록 고리를 끌면 도선의 다른 곳을 볼 수 있어요.</p></section>
+    <p class="help">왼쪽 렌즈는 도선, 오른쪽 렌즈는 전구의 필라멘트를 같은 배율의 원자핵(+)·전자(−) 모형으로 확대해요. 초록 고리를 끌면 도선의 다른 곳을 볼 수 있어요.</p></section>
    <section class="pg"><h3 class="pg-title">관찰 순서</h3>
     <ol class="steps" data-steps><li><b>1</b>스위치가 열린 채 렌즈 속 전자의 움직임을 봐요.</li><li><b>2</b>스위치를 닫고 전자의 움직임을 다시 봐요.</li><li><b>3</b>파란 화살표와 주황 화살표의 방향을 비교해요.</li><li><b>4</b>전지 방향을 바꾸거나 2개로 늘려 봐요.</li><li><b>5</b>두 렌즈에서 도선과 필라멘트의 굵기와 전자가 부딪히는 정도를 비교해요.</li></ol></section>
   </div>
@@ -2179,7 +2184,7 @@ function theoryHTML(){return `
 <p>네온전구는 충분한 전위차가 있어야 방전해요. 실제로는 방전 뒤 전하가 조금 남은 채 꺼지기도 하지만, 이 모형에서는 컵의 전하가 0이 될 때까지 전자가 손으로 빠져나가요. 여기서는 이 경향을 점의 개수로 단순화하며, 실제 점화·소호 전압이나 밝기를 계산하지 않아요. 컵과 인체·주변 사이의 전하 재분배를 요약한 모형이에요. 전자는 금속에서, 전자와 이온은 방전 기체에서, 이온은 인체에서 전류를 운반해요. 파란 입자가 몸속을 그대로 통과한다는 뜻이 아니에요.</p>
 <p>02 접시 전구 · 접시를 올리면 접시 전체 전하는 0인 채 자유 전자만 위·아래로 몰리는 정전기 유도로 나타냈어요. 이은 순간 건너가는 전자 수는 두 테두리의 전자 차이의 절반이고, 전자 3개(점 3개) 이상일 때만 깜박이도록 점화 전압을 단순화했어요. 문질러 생긴 전하로 새로 켜지는 것은 처음 한 번뿐이고, 그 뒤에는 접시를 바꿔 놓거나 다시 올려도 앞에서 건너간 전자가 되돌아가는 만큼만 흘러요(전기 쟁반처럼 접시를 옮기는 데 든 일만큼 다시 켜질 수도 있지만, 이 모형은 다루지 않아요). 실제로는 접시와 플라스틱 접시가 맞닿은 곳에서 전하가 조금 옮겨 가기도 하고 공기 중으로 새어 나가기도 하지만, 이 모형은 계산하지 않아요.</p>
 <p>물 흐름 모형의 cm는 가상 눈금이에요. 물의 높이차와 전압은 대응 관계이며 같은 물리량은 아니에요. 펌프를 끈 뒤 남는 흐름은 저장된 중력 위치 에너지 때문이며, 실제 전지를 제거한 회로의 과도 현상을 그대로 재현하지 않아요. 회로는 정상 직류 상태와 정성적 밝기만 다뤄요.</p>
-<p>03 확대 렌즈 · 도선과 필라멘트를 같은 배율로 그렸지만, 실제 필라멘트는 머리카락보다 훨씬 가늘고 길게 감겨 있어요. 저항이 큰 까닭은 전자가 원자와 자주 부딪히는 모습으로 단순화했고, 실제 저항값이나 온도는 계산하지 않아요.</p></details>
+<p>03 확대 렌즈 · 도선과 필라멘트를 같은 배율의 원자핵(+)·전자(−) 모형으로 그렸어요. 빨간 +는 원자핵(원자의 중심), 파란 −는 움직이는 전자이고, 원자핵 둘레에 묶인 전자는 생략했어요. 실제 필라멘트는 머리카락보다 훨씬 가늘고 길게 감겨 있어요. 저항이 큰 까닭은 전자가 원자와 자주 부딪히는 모습으로 단순화했고, 실제 저항값이나 온도는 계산하지 않아요.</p></details>
  <details class="th-more"><summary>출처와 제작</summary><p>첨부된 기존 가상실험을 바탕으로 SVG와 설명을 개선했어요. 기구 그림은 3D 렌더링 이미지를 WebP로 줄여 내장했어요(도움말의 ‘실험기구 그림 보기’에서 하나씩 볼 수 있어요). 손은 엄지·검지의 맞섬과 집기 자세를 참고했어요. SVG 저장 파일에도 기구 그림이 포함돼요. 참고 사진을 복제하거나 내장하지 않았어요.</p><ul><li><a href="https://sciencej1.cafe24.com/sci2/triboelectricity.html" target="_blank" rel="noopener noreferrer">과학J · 마찰 전기로 네온전구 불 켜기(02 접시 전구의 실험 흐름 참고)</a></li><li><a href="https://www.assh.org/handcare/anatomy/joints" target="_blank" rel="noopener noreferrer">ASSH · 손의 관절 구조</a></li><li><a href="https://www.nickgolinvauxmd.com/learn/how-to-thumb-pinch" target="_blank" rel="noopener noreferrer">Nick Golinvaux · 엄지·검지 집기 자세 사진과 도해</a></li><li><a href="https://openstax.org/books/university-physics-volume-2/pages/9-1-electrical-current" target="_blank" rel="noopener noreferrer">OpenStax · 전류와 전하 운반자</a></li><li><a href="https://www.bmb.colostate.edu/wp-content/uploads/sites/6/2017/03/Static-Flash.pdf" target="_blank" rel="noopener noreferrer">Colorado State University · Static Flash</a></li></ul><p>자료 확인: 2026-09-24.</p>
   <p>🧪 송쌤과학 (Song Ssaem Science)<br>ⓒ 2026 송세호 | 아주중학교<br>📺 YouTube: <a href="https://www.youtube.com/@songsamscience" target="_blank" rel="noopener noreferrer" aria-label="송쌤과학 유튜브 채널 (새 창)">@songsamscience</a> 📷 Instagram: <a href="https://www.instagram.com/songsamscience/" target="_blank" rel="noopener noreferrer" aria-label="송쌤과학 인스타그램 (새 창)">@songsamscience</a><br>⚠ 무단 복제·상업적 이용 금지</p>
   <p><strong>v${APP_VERSION} · ${APP_DATE}</strong></p></details>`}
