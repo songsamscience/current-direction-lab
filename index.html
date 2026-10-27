@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<meta name="version" content="3.12">
+<meta name="version" content="3.13">
 <meta name="description" content="마찰 전기로 네온전구를 켜 보고, 전기 회로 속 전자의 이동 방향과 전류의 방향을 비교하는 가상실험실">
 <meta property="og:title" content="송쌤과학 가상실험실 | 전하와 전류의 이동 방향">
 <meta property="og:description" content="네온전구 · 전기 회로 속 전자 · 물 흐름 모형으로 전류와 전압을 알아보는 가상실험실">
@@ -521,7 +521,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 <script>
 'use strict';
 /* ═════════ 기본 도구 ═════════ */
-const APP_VERSION='3.12', APP_DATE='2026-10-27', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
+const APP_VERSION='3.13', APP_DATE='2026-10-27', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
 const NS='http://www.w3.org/2000/svg';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mod=(a,n)=>((a%n)+n)%n;
@@ -2044,7 +2044,8 @@ let waterCmp=null;
    $('[data-pump]',sec).setAttribute('aria-pressed',s.pump);$('[data-valve]',sec).setAttribute('aria-pressed',!s.valve)}
  $('[data-pump]',sec).addEventListener('click',()=>lab.setPump(!lab.s.pump));
  $('[data-valve]',sec).addEventListener('click',()=>lab.setValve(!lab.s.valve));
- $('[data-reset]',sec).addEventListener('click',()=>lab.reset());
+ // 처음으로 — 물 모형과 함께 짝 맞추기도 처음 상태로(카드 순서도 다시 섞음)
+ $('[data-reset]',sec).addEventListener('click',()=>{lab.reset();for(const k of Object.keys(LS.match))delete LS.match[k];saveL('match');order.sort(()=>Math.random()-.5);waterCmp.clear()});
  for(const b of [$('[data-cmp]',sec),$('[data-cmpbtn]',sec)])b.addEventListener('click',()=>setCmp(!cmp));
  const pwI=$('[data-power]',sec);pwI.addEventListener('input',()=>{lab.setPower(+pwI.value);$('[data-pwv]',sec).textContent=pwI.value+'단계'});
  mapT.disabled=!allOk();if(allOk())solvedAll();
