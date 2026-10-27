@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<meta name="version" content="3.8">
+<meta name="version" content="3.9">
 <meta name="description" content="마찰 전기로 네온전구를 켜 보고, 전기 회로 속 전자의 이동 방향과 전류의 방향을 비교하는 가상실험실">
 <meta property="og:title" content="송쌤과학 가상실험실 | 전하와 전류의 이동 방향">
 <meta property="og:description" content="네온전구 · 전기 회로 속 전자 · 물 흐름 모형으로 전류와 전압을 알아보는 가상실험실">
@@ -274,6 +274,7 @@ svg.scene text.t-cur,svg.scene tspan.t-cur{fill:var(--cur)}
 svg.scene text.t-acc{fill:var(--accent)}
 svg.scene text.nostroke{stroke:none}
 svg.scene[data-narrow] .wide-only{display:none}
+svg.scene:not([data-narrow]) .narrow-only{display:none}
 .grab{cursor:grab;touch-action:none;outline:none}
 .grab:active{cursor:grabbing}
 .grab:focus-visible .focus-ring{stroke:var(--focus);stroke-width:3;stroke-dasharray:7 5;opacity:1}
@@ -520,7 +521,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 <script>
 'use strict';
 /* ═════════ 기본 도구 ═════════ */
-const APP_VERSION='3.8', APP_DATE='2026-10-25', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
+const APP_VERSION='3.9', APP_DATE='2026-10-26', LAB_ID='charge-current', LAB_NAME='전하와 전류의 이동 방향';
 const NS='http://www.w3.org/2000/svg';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mod=(a,n)=>((a%n)+n)%n;
@@ -540,8 +541,9 @@ function eArrow(p){const g=S('g',{class:'arr-e'},p);S('path',{d:'M-15,0H8M1,-7L9
 function place(g,x,y,deg=0){g.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})${deg?` rotate(${deg.toFixed(1)})`:''}`)}
 function svgPoint(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse())}
 function dragify(node,svg,{start,move,end}){
-  node.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();node.focus({preventScroll:true});try{node.setPointerCapture(e.pointerId)}catch(_){}
-    start&&start(svgPoint(svg,e));
+  // start가 노드를 맨 앞으로 다시 붙이면(appendChild) 포인터 캡처가 풀리므로, 캡처는 start 뒤에 건다
+  node.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();node.focus({preventScroll:true});
+    start&&start(svgPoint(svg,e));try{node.setPointerCapture(e.pointerId)}catch(_){}
     const mv=ev=>move(svgPoint(svg,ev)),up=()=>{node.removeEventListener('pointermove',mv);node.removeEventListener('pointerup',up);node.removeEventListener('pointercancel',up);end&&end()};
     node.addEventListener('pointermove',mv);node.addEventListener('pointerup',up);node.addEventListener('pointercancel',up)});
 }
@@ -567,7 +569,7 @@ const Ticker={items:new Set(),raf:0,last:0,
 /* ═════════ ① 전기 회로 — 전자의 이동 방향과 전류의 방향 ═════════
    추상 격자(1 유닛 = 화면 도해 단위). 도선 경로를 따라 전자가 표류(drift)하고, 그 위에 불규칙한 열운동이 겹친다.
    교육용 모델: 표류 속도는 보기 쉽게 크게 키웠다(실제는 1초에 1 mm보다 훨씬 느림). 전구 밝기는 전압에 따른 정성적 표현. */
-const CX=500,CY=280,LENS={x:560,y:262,r:84};
+const CX=500,CY=280,LENS={wire:{x:370,y:250,r:76},fil:{x:690,y:250,r:76}},FIL_AT=[500,392];
 class CircuitLab{
   constructor(host,o={}){
     this.o=Object.assign({id:uid('c'),compact:false,closed:false,vb:[0,0,1000,560],seed:11},o);
@@ -589,14 +591,14 @@ class CircuitLab{
     <linearGradient id="${P}-cell" x1="0" x2="1"><stop offset="0" style="stop-color:var(--cell)"/><stop offset=".3" style="stop-color:var(--metal-lo)"/><stop offset="1" style="stop-color:var(--cell)"/></linearGradient>
     <linearGradient id="${P}-metal" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--metal-hi)"/><stop offset=".55" style="stop-color:var(--metal-mid)"/><stop offset="1" style="stop-color:var(--metal-lo)"/></linearGradient>
     <linearGradient id="${P}-wood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--wood)"/><stop offset="1" style="stop-color:var(--wood-lo)"/></linearGradient>
-    <clipPath id="${P}-lc"><circle r="${LENS.r-3}"/></clipPath>`;
+    <clipPath id="${P}-lc"><circle r="${LENS.wire.r-3}"/></clipPath>`;
     // 받침판(스위치·전구)
     const base=S('g',{'data-asset':'bases'},sv);
     S('rect',{x:424,y:116,width:152,height:26,rx:5,fill:`url(#${P}-wood)`},base);
     S('rect',{x:424,y:452,width:152,height:34,rx:5,fill:`url(#${P}-wood)`},base);
     // 도선 3토막(전지 → 전구 / 전구 → 스위치 / 스위치 → 전지)
     const lw=S('g',null,sv);
-    this.wires=[0,1,2].map(()=>[S('path',{class:'f-wire-lo','stroke-width':14},lw),S('path',{class:'f-wire','stroke-width':10},lw),S('path',{class:'f-wire-hi','stroke-width':2.5},lw)]);
+    this.wires=[0,1,2].map(()=>[S('path',{class:'f-wire-lo','stroke-width':24},lw),S('path',{class:'f-wire','stroke-width':18},lw),S('path',{class:'f-wire-hi','stroke-width':4},lw)]);
     // 전구
     const bulb=S('g',{'data-asset':'bulb'},sv);
     this.glow=S('circle',{cx:500,cy:404,r:60,fill:`url(#${P}-glow)`,opacity:0},bulb);
@@ -638,25 +640,14 @@ class CircuitLab{
     for(const [x,n] of [[380,'A'],[620,'B']]){S('path',{d:`M${x},428V472`,style:'stroke:var(--text-2)','stroke-width':1.6,'stroke-dasharray':'4 4'},this.gates);T(this.gates,x,422,n,'big',{'text-anchor':'middle'})}
     this.gA=T(this.gates,380,508,'','ro',{'text-anchor':'middle'});this.gB=T(this.gates,620,508,'','ro',{'text-anchor':'middle'});
     T(this.gates,500,508,'지나간 전자 수','small',{'text-anchor':'middle'});
-    // 확대 렌즈
+    // 확대 렌즈 2개 — 왼쪽은 도선(초록 고리를 끌어 옮김), 오른쪽은 전구 속 필라멘트(고정). 같은 배율로 굵기·부딪힘을 비교한다
     this.lensG=S('g',null,sv);
-    this.lead1=S('line',{class:'leader','stroke-width':1.5},this.lensG);this.lead2=S('line',{class:'leader','stroke-width':1.5},this.lensG);
-    const lens=S('g',{transform:`translate(${LENS.x} ${LENS.y})`},this.lensG);
-    S('circle',{r:LENS.r,style:'fill:var(--stage-2)'},lens);
-    const inner=S('g',{'clip-path':`url(#${P}-lc)`},lens);
-    S('rect',{x:-100,y:-36,width:200,height:72,style:'fill:var(--wire);fill-opacity:.22'},inner);
-    S('path',{d:'M-100,-36H100M-100,36H100',style:'stroke:var(--wire);stroke-opacity:.8','stroke-width':2},inner);
-    this.ions=[];for(const y of [-20,0,20])for(const x of [-70,-42,-14,14,42,70]){const g=pG(inner,8);this.ions.push({g,x,y:y,ph:this.rand()*6.28})}
-    this.le=[];for(let i=0;i<12;i++){this.le.push({g:eG(inner,5.5),x:-90+i*15+this.rand()*8,y:(this.rand()-.5)*56,vx:0,vy:0,tc:0})}
-    this.lArrE=eArrow(inner);place(this.lArrE,8,-52);this.lArrI=curArrow(inner);place(this.lArrI,-8,54,180);
-    this.lTxtE=T(inner,-22,-47,'전자','t-neg small',{'text-anchor':'end'});this.lTxtI=T(inner,22,59,'전류','t-cur small');
-    S('circle',{r:LENS.r,fill:'none',style:'stroke:var(--metal-mid)','stroke-width':5},lens);
-    this.lMinus=T(lens,-LENS.r-10,5,'(−)극 쪽','t-neg small',{'text-anchor':'end'});this.lPlus=T(lens,LENS.r+10,5,'(+)극 쪽','t-pos small');
-    T(lens,0,LENS.r+19,'도선을 펼친 확대 모형','small wide-only',{'text-anchor':'middle'});
-    this.ring=S('g',{class:'grab',tabindex:0,role:'button','aria-label':'확대 렌즈 위치 — 끌거나 방향키로 도선을 따라 옮겨요'},this.lensG);
+    this.lens={wire:this.makeLens('wire'),fil:this.makeLens('fil')};
+    S('circle',{cx:FIL_AT[0],cy:FIL_AT[1],r:13,fill:'none',style:'stroke:var(--accent)','stroke-width':2.5,'stroke-dasharray':'4 3','pointer-events':'none'},this.lensG);
+    this.ring=S('g',{class:'grab',tabindex:0,role:'button','aria-label':'도선 확대 렌즈 위치 — 끌거나 방향키로 도선을 따라 옮겨요'},this.lensG);
     S('circle',{r:22,fill:'#ffffff','fill-opacity':0},this.ring);S('circle',{r:15,fill:'none',style:'stroke:var(--accent)','stroke-width':3},this.ring);S('circle',{class:'focus-ring',r:21},this.ring);
-    dragify(this.ring,sv,{move:p=>{this.lensF=this.nearestS(p.x,p.y)/this.L;this.draw()}});
-    this.ring.addEventListener('keydown',e=>{const k={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1}[e.key];if(k){e.preventDefault();this.lensF=mod(this.lensF+k*.015,1);this.draw()}});
+    dragify(this.ring,sv,{move:p=>{this.lensF=this.wireS(this.nearestS(p.x,p.y))/this.L;this.draw()}});
+    this.ring.addEventListener('keydown',e=>{const k={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1}[e.key];if(k){e.preventDefault();this.lensF=this.wireS(mod(this.lensF+k*.015,1)*this.L,k)/this.L;this.draw()}});
     // 이름표
     const lb=S('g',null,sv);
     T(lb,108,285,'전지','big',{'text-anchor':'end'});T(lb,500,166,'스위치','big',{'text-anchor':'middle'});T(lb,532,398,'전구','big');
@@ -665,12 +656,40 @@ class CircuitLab{
     this.batHi=S('rect',{x:112,y:0,width:76,height:0,rx:10,fill:'none',style:'stroke:var(--accent)','stroke-width':3,opacity:0},sv);
     if(this.o.compact){this.gates.style.display='none';this.lensG.style.display='none'}
   }
+  /* 확대 렌즈 하나. 도선은 굵고 원자 사이가 넓어 전자가 덜 부딪히고(저항 작음),
+     필라멘트는 가늘고 원자가 촘촘해 자주 부딪힌다(저항 큼). 전류가 흐를 때 부딪힌 원자가 반짝이고 필라멘트가 달아오른다 */
+  makeLens(kind){const P=this.o.id,C=LENS[kind],fil=kind==='fil',hh=fil?16:36,ir=fil?5:8,er=fil?4:5.5,Z={kind,C,hh,ir,er,hit:fil?.55:.1,ions:[],le:[]};
+    Z.lead=[0,1].map(()=>S('line',{class:'leader','stroke-width':1.5},this.lensG));
+    const lens=S('g',{transform:`translate(${C.x} ${C.y})`},this.lensG);
+    S('circle',{r:C.r,style:'fill:var(--stage-2)'},lens);
+    const inner=S('g',{'clip-path':`url(#${P}-lc)`},lens);
+    S('rect',{x:-100,y:-hh,width:200,height:2*hh,style:`fill:var(--wire);fill-opacity:${fil?.34:.22}`},inner);
+    Z.heat=S('rect',{x:-100,y:-hh,width:200,height:2*hh,style:'fill:var(--glow)',opacity:0},inner);
+    S('path',{d:`M-100,${-hh}H100M-100,${hh}H100`,style:'stroke:var(--wire);stroke-opacity:.8','stroke-width':2},inner);
+    const grid=fil?[-8,8].flatMap((y,j)=>[-90,-72,-54,-36,-18,0,18,36,54,72,90].map(x=>[x+(j?9:0),y])):[-20,0,20].flatMap(y=>[-70,-42,-14,14,42,70].map(x=>[x,y]));
+    for(const [x,y] of grid){const sp=S('circle',{cx:x,cy:y,r:ir+3,fill:'none',style:'stroke:var(--glow)','stroke-width':2.5,opacity:0},inner);Z.ions.push({g:pG(inner,ir),sp,x,y,ph:this.rand()*6.28,hot:0})}
+    const n=fil?10:12,ym=hh-er-1;for(let i=0;i<n;i++)Z.le.push({g:eG(inner,er),x:-90+i*180/n+this.rand()*8,y:(this.rand()-.5)*2*ym,vx:0,vy:0,tc:0,cd:0});
+    Z.arrE=eArrow(inner);place(Z.arrE,8,-52);Z.arrI=curArrow(inner);place(Z.arrI,-8,54,180);
+    Z.txtE=T(inner,-22,-47,'전자','t-neg small',{'text-anchor':'end'});Z.txtI=T(inner,22,59,'전류','t-cur small');
+    S('circle',{r:C.r,fill:'none',style:'stroke:var(--metal-mid)','stroke-width':5},lens);
+    Z.minus=T(lens,-C.r-10,5,'','small wide-only',{'text-anchor':'end'});Z.plus=T(lens,C.r+10,5,'','small wide-only');
+    const cap=T(lens,0,C.r+20,'','small wide-only',{'text-anchor':'middle'}); // 줄 간격은 글자 크기(em)를 따른다
+    S('tspan',{x:0},cap).textContent=fil?'필라멘트(텅스텐) 확대':'도선(구리) 확대';
+    S('tspan',{x:0,dy:'1.3em',style:'font-weight:800;fill:var(--text-1)'},cap).textContent=fil?'가늘다 · 저항 큼':'굵다 · 저항 작음';
+    T(lens,0,C.r+24,fil?'필라멘트 · 저항 큼':'도선 · 저항 작음','small narrow-only',{'text-anchor':'middle',style:'font-weight:800;fill:var(--text-1)'});
+    return Z}
+  leaders(Z,px,py,off){const C=Z.C,dx=px-C.x,dy=py-C.y,dd=Math.hypot(dx,dy),R=C.r+2;
+    if(dd<=R+off){Z.lead.forEach(l=>l.style.display='none');return}
+    const ph=Math.atan2(dy,dx),th=Math.acos(R/dd);
+    Z.lead.forEach((l,i)=>{const a=ph+(i?-th:th);l.setAttribute('x1',(px-dx/dd*off).toFixed(1));l.setAttribute('y1',(py-dy/dd*off).toFixed(1));l.setAttribute('x2',(C.x+R*Math.cos(a)).toFixed(1));l.setAttribute('y2',(C.y+R*Math.sin(a)).toFixed(1));l.style.display=''})}
+  /* 도선 렌즈 고리는 전구 속(필라멘트 쪽)으로 들어가지 않는다 — 필라멘트는 오른쪽 렌즈가 따로 보여 준다 */
+  wireS(s,k=0){const [a,b]=this.bulbS;s=mod(s,this.L);if(s<=a||s>=b)return s;return k>0||(!k&&b-s<s-a)?b+2:a-2}
   layout(){
     const n=this.s.cells,y0=280-n*50,y1=280+n*50,r=this.s.reversed,P=this.o.id;
     const pts=[[150,y1],[150,450],[470,450],[490,438],[488,391],[512,391],[500,451],[530,450],[850,450],[850,110],[540,110],[460,110],[150,110],[150,y0]];
     this.segs=[];let c=0;
     for(let i=0;i<pts.length-1;i++){const [xa,ya]=pts[i],[xb,yb]=pts[i+1],len=Math.hypot(xb-xa,yb-ya);this.segs.push({x0:xa,y0:ya,dx:(xb-xa)/len,dy:(yb-ya)/len,len,c0:c});c+=len}
-    this.L=c;this.bladeSeg=10;
+    this.L=c;this.bladeSeg=10;this.bulbS=[this.segs[2].c0,this.segs[7].c0];
     const d=[`M150,${y1}V450H470`,`M530,450H850V110H548`,`M452,110H150V${y0}`];
     this.wires.forEach((ps,i)=>ps.forEach(p=>p.setAttribute('d',d[i])));
     const N=Math.round(this.L/20);
@@ -694,8 +713,8 @@ class CircuitLab{
   pointAt(s){
     s=mod(s,this.L);const sg=this.segs;let i=0;while(i<sg.length-1&&s>sg[i].c0+sg[i].len)i++;
     const q=sg[i],u=s-q.c0;
-    if(i===this.bladeSeg&&this.blade>0){const a=-.663*this.blade,rr=80-u,ca=Math.cos(a),sa=Math.sin(a);return{x:460+rr*ca,y:110+rr*sa,tx:-ca,ty:-sa}}
-    return{x:q.x0+q.dx*u,y:q.y0+q.dy*u,tx:q.dx,ty:q.dy};
+    if(i===this.bladeSeg&&this.blade>0){const a=-.663*this.blade,rr=80-u,ca=Math.cos(a),sa=Math.sin(a);return{x:460+rr*ca,y:110+rr*sa,tx:-ca,ty:-sa,i}}
+    return{x:q.x0+q.dx*u,y:q.y0+q.dy*u,tx:q.dx,ty:q.dy,i};
   }
   nearestS(px,py){let best=1e12,bs=0;for(const q of this.segs){const t=clamp((px-q.x0)*q.dx+(py-q.y0)*q.dy,0,q.len),x=q.x0+q.dx*t,y=q.y0+q.dy*t,d=(x-px)**2+(y-py)**2;if(d<best){best=d;bs=q.c0+t}}return bs}
   crossed(old,d,g){const L=this.L;if(d>0){const r=mod(g-old,L);return r>0&&r<=d}const r=mod(old-g,L);return r>=0&&r<-d}
@@ -712,18 +731,23 @@ class CircuitLab{
       if(d){if(this.crossed(old,d,this.sA))this.count.A++;if(this.crossed(old,d,this.sB))this.count.B++}
       e.tc-=dt;if(e.tc<=0){const a=rnd()*6.283,sp=16+rnd()*22;e.va=Math.cos(a)*sp;e.vn=Math.sin(a)*sp;e.tc=.1+rnd()*.28}
       e.ja+=e.va*dt;e.jn+=e.vn*dt;
-      if(Math.abs(e.ja)>7){e.ja=Math.sign(e.ja)*7;e.va*=-1}if(Math.abs(e.jn)>3.4){e.jn=Math.sign(e.jn)*3.4;e.vn*=-1}
+      if(Math.abs(e.ja)>7){e.ja=Math.sign(e.ja)*7;e.va*=-1}if(Math.abs(e.jn)>5.5){e.jn=Math.sign(e.jn)*5.5;e.vn*=-1}
     }
     const vd=cond?this.dir()*30*this.s.cells:0;
-    for(const e of this.le){e.tc-=dt;if(e.tc<=0){const a=rnd()*6.283,sp=40+rnd()*45;e.vx=Math.cos(a)*sp;e.vy=Math.sin(a)*sp;e.tc=.1+rnd()*.3}
-      e.x+=(e.vx+vd)*dt;e.y+=e.vy*dt;if(Math.abs(e.y)>30){e.y=Math.sign(e.y)*30;e.vy*=-1}if(e.x>96)e.x-=192;if(e.x<-96)e.x+=192}
+    for(const Z of Object.values(this.lens)){const ym=Z.hh-Z.er-1,rc=Z.ir+Z.er;
+      for(const e of Z.le){e.tc-=dt;e.cd-=dt;if(e.tc<=0){const a=rnd()*6.283,sp=40+rnd()*45;e.vx=Math.cos(a)*sp;e.vy=Math.sin(a)*sp;e.tc=.1+rnd()*.3}
+        e.x+=(e.vx+vd)*dt;e.y+=e.vy*dt;if(Math.abs(e.y)>ym){e.y=Math.sign(e.y)*ym;e.vy*=-1}if(e.x>96)e.x-=192;if(e.x<-96)e.x+=192;
+        // 원자에 가까이 가면 일정 확률로 튕겨 나간다(필라멘트가 훨씬 자주). 전류가 흐를 때는 부딪힌 원자가 반짝인다
+        if(e.cd<=0)for(const io of Z.ions){const dx=e.x-io.x,dy=e.y-io.y,d=Math.hypot(dx,dy)||1;if(d>=rc)continue;e.cd=.2;
+          if(rnd()<Z.hit){const nx=dx/d,ny=dy/d,vn=e.vx*nx+e.vy*ny;if(vn<0){e.vx-=2*vn*nx;e.vy-=2*vn*ny}if(cond)io.hot=1}break}}
+      for(const io of Z.ions)io.hot=Math.max(0,io.hot-dt*4)}
     this.flash=Math.max(0,this.flash-dt);
   }
   draw(){
     this.bladeG.setAttribute('transform',`rotate(${(-38*this.blade).toFixed(2)} 460 110)`);
     if(this.sw._c!==this.s.closed){this.sw._c=this.s.closed;this.sw.setAttribute('aria-label',`스위치 — 지금 ${this.s.closed?'닫힘':'열림'}. 누르면 ${this.s.closed?'열어요':'닫아요'}`)}
     const L=this.L;
-    for(const e of this.es){const p=this.pointAt(e.s),x=p.x+p.tx*e.ja-p.ty*e.jn,y=p.y+p.ty*e.ja+p.tx*e.jn;place(e.g,x,y);e.g.setAttribute('opacity',Math.min(1,e.s/14,(L-e.s)/14).toFixed(2))}
+    for(const e of this.es){const p=this.pointAt(e.s),jn=p.i>=2&&p.i<=6?e.jn*.3:e.jn,x=p.x+p.tx*e.ja-p.ty*jn,y=p.y+p.ty*e.ja+p.tx*jn;place(e.g,x,y);e.g.setAttribute('opacity',Math.min(1,e.s/14,(L-e.s)/14).toFixed(2))}
     const cond=this.conducting(),b=cond?Math.min(1,.55*this.s.cells):0;
     this.glow.setAttribute('opacity',b.toFixed(2));this.glow.setAttribute('r',(44+36*b).toFixed(1));
     this.core.setAttribute('opacity',(b*.9).toFixed(2));this.fil.style.stroke=b?'var(--glow)':'var(--metal-mid)';
@@ -737,14 +761,16 @@ class CircuitLab{
     if(this.s.showGates&&!this.o.compact){this.gates.style.display='';this.gA.textContent=`${this.count.A}개`;this.gB.textContent=`${this.count.B}개`}else this.gates.style.display='none';
     if(this.s.showLens&&!this.o.compact){this.lensG.style.display='';
       const p=this.pointAt(this.lensF*L);place(this.ring,p.x,p.y);
-      const dx=p.x-LENS.x,dy=p.y-LENS.y,dd=Math.hypot(dx,dy),R=LENS.r+2;
-      if(dd>R+16){const ph=Math.atan2(dy,dx),th=Math.acos(R/dd);[[this.lead1,ph+th],[this.lead2,ph-th]].forEach(([l,a])=>{l.setAttribute('x1',(p.x-dx/dd*16).toFixed(1));l.setAttribute('y1',(p.y-dy/dd*16).toFixed(1));l.setAttribute('x2',(LENS.x+R*Math.cos(a)).toFixed(1));l.setAttribute('y2',(LENS.y+R*Math.sin(a)).toFixed(1));l.style.display=''})}
-      else{this.lead1.style.display='none';this.lead2.style.display='none'}
-      place(this.lArrE,8,-52,this.dir()===1?0:180);place(this.lArrI,-8,54,this.dir()===1?180:0);this.lMinus.textContent=this.s.reversed?'(+)극 쪽':'(−)극 쪽';this.lPlus.textContent=this.s.reversed?'(−)극 쪽':'(+)극 쪽';this.lMinus.setAttribute('class',(this.s.reversed?'t-pos':'t-neg')+' small');this.lPlus.setAttribute('class',(this.s.reversed?'t-neg':'t-pos')+' small');
-      for(const io of this.ions)place(io.g,io.x+Math.sin(this.t*9+io.ph)*.9,io.y+Math.cos(this.t*8+io.ph)*.9);
-      for(const e of this.le)place(e.g,e.x,e.y);
-      for(const g of [this.lArrE,this.lTxtE])g.style.display=cond&&this.s.showE?'':'none';
-      for(const g of [this.lArrI,this.lTxtI])g.style.display=cond&&this.s.showI?'':'none';
+      this.leaders(this.lens.wire,p.x,p.y,16);this.leaders(this.lens.fil,FIL_AT[0],FIL_AT[1],13);
+      const rv=this.s.reversed;
+      for(const Z of Object.values(this.lens)){const fil=Z.kind==='fil',amp=fil?.9+1.6*b:.9+.3*b; // 달아오를수록 원자가 크게 떤다
+        place(Z.arrE,8,-52,this.dir()===1?0:180);place(Z.arrI,-8,54,this.dir()===1?180:0);
+        Z.minus.textContent=rv?'(+)극 쪽':'(−)극 쪽';Z.plus.textContent=rv?'(−)극 쪽':'(+)극 쪽';Z.minus.setAttribute('class',(rv?'t-pos':'t-neg')+' small wide-only');Z.plus.setAttribute('class',(rv?'t-neg':'t-pos')+' small wide-only');
+        for(const io of Z.ions){place(io.g,io.x+Math.sin(this.t*9+io.ph)*amp,io.y+Math.cos(this.t*8+io.ph)*amp);io.sp.setAttribute('opacity',(io.hot*.9).toFixed(2))}
+        Z.heat.setAttribute('opacity',(fil?.45*b:0).toFixed(2));
+        for(const e of Z.le)place(e.g,e.x,e.y);
+        for(const g of [Z.arrE,Z.txtE])g.style.display=cond&&this.s.showE?'':'none';
+        for(const g of [Z.arrI,Z.txtI])g.style.display=cond&&this.s.showI?'':'none'}
     }else this.lensG.style.display='none';
     this.batHi.setAttribute('opacity',(this.flash/.5).toFixed(2));
   }
@@ -759,6 +785,7 @@ class CircuitLab{
     let ex=!s.closed?'스위치를 닫으면 전기장 변화가 빠르게 전달되어 도선에 있던 전자들이 평균적으로 한 방향으로 이동해요.'
       :'전류의 방향(주황 화살표)은 (+)극에서 나와 (−)극으로 들어가는 쪽으로, 전자의 이동 방향(파란 화살표)과 반대예요.';
     if(cond&&s.cells===2)ex+=' 같은 방향으로 직렬 연결한 전지 2개가 더 큰 전압을 만들어요. 이 모형에서는 더 큰 전류와 밝기를 보여 줘요.';
+    else if(cond&&s.showLens&&!this.o.compact)ex+=' 두 렌즈를 비교해 봐요. 필라멘트는 도선보다 가늘어 전자가 원자와 더 자주 부딪혀요(저항이 커요). 이때 열이 나서 필라멘트가 빛을 내요.';
     return{obs,ex,cond:`전지 ${s.cells}개(${V} V) · (+)극이 ${s.reversed?'아래':'위'} · 스위치 ${s.closed?'닫힘':'열림'}`,
       state:`전류 ${cond?'흐름':'흐르지 않음'} · 전구 ${cond?'켜짐':'꺼짐'} · 전자: (−)극 → (+)극 쪽 · 외부 회로 전류: (+)극 → (−)극 쪽${s.showGates&&!this.o.compact?` · 지나간 전자 A ${this.count.A}개, B ${this.count.B}개`:''}`};
   }
@@ -911,7 +938,7 @@ class NeonLab{
     if(inPoly(t.x,t.y,ALU)){const q=aluNear(t.x,t.y);this.n.x+=q.x-t.x;this.n.y+=q.y-t.y}
     t=this.tip();if(inPoly(t.x,t.y,PLA)){const q=plaNear(t.x,t.y);this.n.x+=q.x-t.x+(q.x<600?-1:1);this.n.y+=q.y-t.y}
     t=this.tip();const dd=aluNear(t.x,t.y).d,c=this.nContact?dd<=9:dd<=3.5;
-    if(c&&!this.nContact){this.neonTries++;if(this.free.length<=CUP_N+1)this.emit('neon-none')}
+    if(c&&!this.nContact){this.neonTries++;if(this.free.length<=CUP_N)this.emit('neon-none')}
     this.nContact=c;if(c)this.flow();this.draw()}
   rubOne(){const flying=this.fly.filter(f=>f.kind==='rub').length;
     if(this.extra.length+flying>=6)return;
@@ -929,7 +956,7 @@ class NeonLab{
     cand.slice(0,take).forEach((x,i)=>{const from=[b.x+RX*.84*Math.cos(x.a),b.y+RY*.84*Math.sin(x.a)];x.g.remove();this.extra.splice(this.extra.indexOf(x),1);
       this.addFly({kind:'touch',from,to:()=>[c[0],c[1]],dur:.35,delay:i*.08,arc:0,onDone:()=>{const e=this.addFree(c[0]+(600-c[0])*.08,c[1]+10);e.vx=(600-e.x)*.8;e.vy=(366-e.y)*.8;e.tc=.4;if(i===take-1)this.emit('touch',take)}})});
   }
-  flow(){const k=this.free.length-CUP_N-1;if(k<=0||this.fly.some(f=>f.kind==='flow'))return;
+  flow(){const k=this.free.length-CUP_N;if(k<=0||this.fly.some(f=>f.kind==='flow'))return;
     const t=this.tip(),n=this.n;
     const pick=[...this.free].sort((a,b)=>Math.hypot(a.x-t.x,a.y-t.y)-Math.hypot(b.x-t.x,b.y-t.y)).slice(0,k);
     this.lastK=k;this.arrowT=2.2;
@@ -1101,7 +1128,9 @@ class WaterLab{
    위쪽 테두리(플라스틱 위)·아래쪽 바닥(털가죽 위)으로 몰린다(정전기 유도 — 접시 전체 전하는 0). 네온전구의 두 다리를
    두 테두리에 대면 테두리에 몰린 전자가 건너가며 순간 깜박인다. 빨대로 두 접시를 들어 올린 채 다시 이으면 반대로 한 번 더 깜박인다.
    모형: 유도값 u(플라스틱 위 +k · 털가죽 위 −k · 그 밖 0, k=min(q,5)), 테두리 여분 r=n+u,
-   이은 순간 흐름 m=trunc((r왼−r오)/2), |m|≥3일 때만 흐른다(점화 전압을 점의 개수로 단순화). 점 1개 = 아주 많은 전하. */
+   이은 순간 흐름 m=trunc((r왼−r오)/2), |m|≥3일 때만 흐른다(점화 전압을 점의 개수로 단순화). 점 1개 = 아주 많은 전하.
+   문질러 생긴 전하로 새로 켜지는 것은 처음 한 번뿐(spent) — 그 뒤에는 앞에서 건너간 전자가 되돌아가는 만큼만 흐른다
+   (접시를 바꿔 놓거나 다시 올릴 때마다 끝없이 켜지지 않게). */
 const DL={N:12,QMAX:8,KMAX:5,MIN:3,RUB:90,SNAP:55,
   SEAT:{plastic:[260,336],fur:[640,352]},HOME:{A:[260,160],B:[640,160]},LAMP0:[935,440],FUR0:[640,440],SHELF:160,LAMP_YMIN:178};
 /* 그림 상자(장면 단위). 접시는 밑바닥 앞 중심, 털가죽은 아래 가운데, 네온전구는 두 다리 끝의 가운데, 손은 집는 점 기준.
@@ -1130,7 +1159,7 @@ class DishLab{
     for(const f of this.fly||[])f.g.remove();for(const D of this.dishes)for(const e of D.free||[])e.g.remove();
     clearTimeout(this._furT);
     this.fly=[];this.queue=[];this.t=0;this.rubAcc=0;this.q=0;this.flashes=0;this.links=0;this.glowA=0;this.arrowT=0;this.burst=0;this.dir=1;
-    this.drag=null;this.paused=false;this.linked=false;this.lastFlow=null;this.blockNote=false;
+    this.drag=null;this.paused=false;this.linked=false;this.lastFlow=null;this.blockNote=false;this.spent=false;
     this.v={particles:true,showE:true,showI:true};
     this.furSites.forEach(s=>{s.hasE=true;s.ph=this.rand()*6.28});this.plaSites.forEach(s=>{s.hasX=false;s.ph=this.rand()*6.28});
     this.f={x:DL.FUR0[0],y:DL.FUR0[1]};this.L={x:DL.LAMP0[0],y:DL.LAMP0[1]};
@@ -1239,7 +1268,7 @@ class DishLab{
   /* ── 알루미늄 접시: 들면 유도가 풀리고, 받침 자리 근처에 놓으면 앉는다. 위쪽에서 놓으면 준비대로, 그 밖에서는 빨대를 잡은 채 들고 있다 ── */
   liftDish(D){if(D.seat==='plastic'||D.seat==='fur'){const was=this.u(D);D.seat='air';this.rebalance(D);this.emit('lift',{D,was})}else D.seat='air';this.checkLink()}
   moveDish(D,x,y){if(this.flowing())return;D.x=clamp(x,110,960);D.y=clamp(y,160,440);this.checkLink();this.draw()}
-  snapDish(D){for(const s of ['plastic','fur']){const [sx,sy]=DL.SEAT[s];if(Math.hypot(D.x-sx,D.y-sy)<=DL.SNAP&&!this.seatOf(s)&&(s!=='fur'||this.furHome())){D.x=sx;D.y=sy;D.seat=s;D.seated++;this.rebalance(D);this.checkLink();this.emit('seat',{D,seat:s});return true}}return false}
+  snapDish(D){for(const s of ['plastic','fur']){const [sx,sy]=DL.SEAT[s];if(Math.hypot(D.x-sx,D.y-sy)<=DL.SNAP&&!this.seatOf(s)&&(s!=='fur'||this.furHome())){D.x=sx;D.y=sy;D.seat=s;D.seated++;this.rebalance(D);this.emit('seat',{D,seat:s});this.checkLink();return true}}return false}
   dropDish(D){if(this.snapDish(D))return;const home=DL.HOME[D.name];
     if(D.y<=205||Math.hypot(D.x-home[0],D.y-home[1])<=70){this.queue.push({o:D.name,to:home,sp:700,then:()=>{D.seat='shelf';this.checkLink()}});return}
     D.seat='air';this.checkLink();this.emit('hold',D)}
@@ -1259,19 +1288,23 @@ class DishLab{
   /* 이을 수 있는 자리 찾기(단추 시연) — 두 접시 사이 위쪽 */
   lampSpot(){const [l,r]=this.sides(),mx=(l.x+r.x)/2,cy=(l.y+r.y)/2+D_RIM.cy;let best=null;
     for(let y=DL.LAMP_YMIN;y<=440;y+=3)for(let dx=-60;dx<=60;dx+=5){if(!this.reachAt(mx+dx,y))continue;const c=Math.abs(y-cy)+Math.abs(dx)*.5;if(!best||c<best[2])best=[mx+dx,y,c]}return best&&[best[0],best[1]]}
-  checkLink(pass){const c=!!this.contacts();if(c&&!this.linked&&!pass){this.linked=true;this.links++;const m=this.mNow();if(Math.abs(m)>=DL.MIN)this.flow(m);else this.emit('neon-none',{m})}else if(!c&&this.linked)this.linked=false}
+  checkLink(pass){const c=!!this.contacts();if(c&&!this.linked&&!pass){this.linked=true;this.links++;const m=this.mNow();if(Math.abs(m)>=DL.MIN)this.flow(m);else this.emit('neon-none',{m,raw:this.mRaw()})}else if(!c&&this.linked)this.linked=false}
   r(D){return D.n+this.u(D)}
-  mNow(){const [l,r]=this.sides();return Math.trunc((this.r(l)-this.r(r))/2)}
+  mRaw(){const [l,r]=this.sides();return Math.trunc((this.r(l)-this.r(r))/2)}
+  /* 되돌아갈 수 있는 전자 수: 내보내는 접시에 남는 전자 ↔ 받는 접시에 모자라는 전자 */
+  back(donor,acc){return Math.min(Math.max(0,donor.n),Math.max(0,-acc.n))}
+  mNow(){const m=this.mRaw();if(!this.spent||!m)return m;const [l,r]=this.sides(),donor=m>0?l:r,acc=m>0?r:l;return Math.sign(m)*Math.min(Math.abs(m),this.back(donor,acc))}
   /* 전자(점) 하나의 길: 내보내는 테두리 → 다리 끝 → 다리 → 유리 밑 → 전극 → (기체) → 반대 전극 → … → 받는 테두리 */
   flow(m){if(this.flowing())return;const cs=this.contacts();if(!cs)return;const [l,r]=this.sides(),donor=m>0?l:r,acc=m>0?r:l,n=Math.abs(m),L=this.L;
     const G=k=>[L.x+LP[k][0],L.y+LP[k][1]],path=[cs[0],G('LT'),G('LB'),G('LS'),G('LEb'),G('LE'),G('RE'),G('REb'),G('RS'),G('RB'),G('RT'),cs[1]];if(m<0)path.reverse();
     const cD=path[0],cA=path[path.length-1];
     const tops=donor.free.filter(e=>e.band==='top').sort((a,b)=>Math.hypot(a.x+donor.x-cD[0],a.y+donor.y-cD[1])-Math.hypot(b.x+donor.x-cD[0],b.y+donor.y-cD[1]));
     const pick=tops.slice(0,n);if(pick.length<n)pick.push(...donor.free.filter(e=>e.band==='bot').slice(0,n-pick.length));
+    const back=n<=this.back(donor,acc);if(!back)this.spent=true;
     this.dir=m>0?1:-1;this.arrowT=2.4;this.lastFlow={donor,acc,n};
     pick.forEach((e,i)=>{donor.free.splice(donor.free.indexOf(e),1);e.g.remove();donor.n--;
       this.addFly({kind:'flow',pts:[[e.x+donor.x,e.y+donor.y],...path],dur:.7,delay:i*.08,gap:6,onDone:()=>{this.addFree(acc,'top',[cA[0]-acc.x,cA[1]-acc.y+10]);acc.n++;
-        if(!this.fly.some(f=>f.kind==='flow'&&f!==this._done)){this.flashes++;this.rebalance(donor);this.rebalance(acc);this.emit('flash',{n,donor,acc,both:donor.seat!=='plastic'&&donor.seat!=='fur'})}}})});
+        if(!this.fly.some(f=>f.kind==='flow'&&f!==this._done)){this.flashes++;this.rebalance(donor);this.rebalance(acc);this.emit('flash',{n,donor,acc,back})}}})});
     this.dishes.forEach(D=>this.rebalance(D))}
   addFly(f){f.g=eG(this.flyG,4.8);f.t=-(f.delay||0);f.g.style.display='none';if(f.pts){f.lens=[];let L=0;for(let i=1;i<f.pts.length;i++){const l=Math.hypot(f.pts[i][0]-f.pts[i-1][0],f.pts[i][1]-f.pts[i-1][1]);f.lens.push(l);L+=l}f.L=L;
       if(f.gap!=null){let a=0;for(let i=0;i<f.gap;i++)a+=f.lens[i];f.g0=a/L;f.g1=(a+f.lens[f.gap])/L}}this.fly.push(f);Ticker.kick()}
@@ -1420,8 +1453,8 @@ CircuitLab.prototype.build=function(){cb.call(this);
 };
 const cd=CircuitLab.prototype.draw;CircuitLab.prototype.draw=function(){cd.call(this);if(this.bulbPNG)this.bulbPNG.style.filter=this.conducting()?'none':'grayscale(1) brightness(.85)'};
 CircuitLab.prototype.layout=function(){cl.call(this);const n=this.s.cells,y0=280-n*50,y1=280+n*50;
- this.pngWires.innerHTML='';tube(this.pngWires,'wire',[[150,y1],[150,450],[470,450]],12);tube(this.pngWires,'wire',[[530,450],[850,450],[850,110],[548,110]],12);tube(this.pngWires,'wire',[[460,110],[150,110],[150,y0]],12);
- tube(this.pngWires,'wire',[[470,450],[490,438]],5);tube(this.pngWires,'wire',[[530,450],[500,451]],5);
+ this.pngWires.innerHTML='';tube(this.pngWires,'wire',[[150,y1],[150,450],[470,450]],22);tube(this.pngWires,'wire',[[530,450],[850,450],[850,110],[548,110]],22);tube(this.pngWires,'wire',[[460,110],[150,110],[150,y0]],22);
+ tube(this.pngWires,'wire',[[470,450],[490,438]],7);tube(this.pngWires,'wire',[[530,450],[500,451]],7);
  this.batInner.innerHTML='';for(let i=0;i<n;i++){const u=y0+i*100,rv=this.s.reversed,g=S('g',{transform:rv?`rotate(180 150 ${u+50})`:''},this.batInner);sprite(g,'battery',124,u,52,100);T(this.batInner,150,rv?u+48:u+60,'1.5 V','small nostroke',{'text-anchor':'middle',style:'fill:var(--cell-cap);font-weight:800'});T(this.batInner,150,rv?u+82:u+26,'+','nostroke',{'text-anchor':'middle',style:'fill:var(--cell-cap);font-weight:800'});}S('rect',{class:'focus-ring',x:110,y:y0-12,width:80,height:n*100+24,rx:10},this.batInner);S('rect',{x:110,y:y0-12,width:80,height:n*100+24,fill:'#ffffff','fill-opacity':0,'pointer-events':'all','data-hit':'battery'},this.batInner);
 };
 const nb=NeonLab.prototype.build;
@@ -1783,6 +1816,7 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
   </div>`);
  const done=[0,0,0];
  const READY={obs:'털가죽으로 플라스틱 접시를 여러 번 문질러 보세요',ex:'털가죽을 끌어 플라스틱 접시 위에서 좌우로 움직이거나, ‘1 접시 문지르기’를 눌러요.'};
+ const SPENT='이 모형에서는 문질러 생긴 전하로 불이 새로 켜지는 것은 처음 한 번뿐이에요. 접시를 바꿔 놓거나 다시 올려도 켜지지 않아요. 다시 해 보려면 ‘처음으로’를 눌러요.';
  const msg={...READY};const set=(o,e)=>{if(o!=null)msg.obs=o;if(e!=null)msg.ex=e};
  let lab=null;lab=new DishLab($('[data-stage]',sec),{onEvent:(type,L,d)=>{const c=L.charges(),nm=D=>'접시 '+D.name,q=L.q;
    if(type==='reset'){done.fill(0);set(READY.obs,READY.ex)}
@@ -1792,17 +1826,19 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
    if(type==='seat'){const D=d.D;if(L.seatOf('plastic')&&L.seatOf('fur'))done[1]=1;
      if(!L.k())set(`${nm(D)}를 올렸지만 자유 전자는 그대로 떠돌아요 · ${nm(D)} 전하 ${fmtQ(-D.n)}`,'플라스틱 접시를 먼저 털가죽으로 여러 번 문질러요.');
      else if(d.seat==='plastic')set(`${nm(D)}의 자유 전자가 아래 (−)에 밀려 위쪽 테두리 둘레로 몰렸어요 · ${nm(D)} 전하 ${fmtQ(-D.n)}`,'아래쪽 바닥에는 원자핵(+)이 드러나요. 원자핵은 제자리에 있고 자유 전자만 움직여요.');
-     else set(`${nm(D)}의 자유 전자가 아래 (+)에 끌려 아래쪽 바닥으로 내려갔어요 · ${nm(D)} 전하 ${fmtQ(-D.n)}`,'위쪽 테두리 둘레에는 원자핵(+)이 드러나요. 원자핵은 제자리에 있고 자유 전자만 움직여요.')}
+     else set(`${nm(D)}의 자유 전자가 아래 (+)에 끌려 아래쪽 바닥으로 내려갔어요 · ${nm(D)} 전하 ${fmtQ(-D.n)}`,'위쪽 테두리 둘레에는 원자핵(+)이 드러나요. 원자핵은 제자리에 있고 자유 전자만 움직여요.');
+     // 끌어오는 동안 이미 이어졌는데 다시 켜지지 않을 때 — 까닭을 보여 준다
+     if(L.linked&&L.spent&&!L.flowing()&&Math.abs(L.mRaw())>=DL.MIN&&Math.abs(L.mNow())<DL.MIN)set('네온전구가 이어져 있지만 불이 켜지지 않아요 · 두 접시 테두리에 더 흐를 전자가 없어요',SPENT)}
    if(type==='lift'&&d.was)set(`${nm(d.D)}를 들어 올렸어요 · 자유 전자가 다시 고르게 퍼져요`,`${nm(d.D)}의 전하(${fmtQ(-d.D.n)})는 그대로예요.`);
    if(type==='hold'&&!d.seated)set(`${nm(d)}를 빨대로 들고 있어요 · ${nm(d)} 전하 ${fmtQ(-d.n)}`,'플라스틱 접시(또는 털가죽) 위에 내려놓거나 위쪽 준비대에 올려놓아요.');
    if(type==='body-press')set(null,'접시는 빨대를 잡고 옮겨요. 실제 실험에서 손이 알루미늄 접시에 닿으면 전하가 손으로 빠져나가요.');
-   if(type==='flash'){const {n,donor,acc,both}=d;
-     if(!both){done[2]=1;set(`네온전구에 순간 불이 켜졌다가 꺼졌어요 · ${nm(donor)}의 전자 ${n}개가 네온전구를 지나 ${nm(acc)}로 이동했어요 · 접시 A ${fmtQ(c.A)}, 접시 B ${fmtQ(c.B)}`,'전자가 나오는 쪽 전극 둘레가 빛나요. 전류의 방향(주황)은 전자의 이동 방향(파랑)과 반대예요. 전자가 다 건너가면 불이 꺼져요.')}
-     else set(`네온전구가 한 번 더 깜박였어요 · 이번에는 ${nm(donor)}의 전자 ${n}개가 ${nm(acc)}로 건너가 반대쪽 전극이 빛났어요 · 접시 A ${fmtQ(c.A)}, 접시 B ${fmtQ(c.B)}`,'접시를 들어 올리면 아래 접시와 털가죽의 영향이 사라져, 앞에서 건너간 전자가 되돌아가요.')}
-   if(type==='neon-none'){const m=Math.abs(d.m);
-     if(m)set(`네온전구를 이었지만 불이 켜지지 않았어요 · 건너갈 전자가 ${m}개뿐이에요`,q<3?'여러 번 문질러 전하를 더 모은 뒤 다시 해 봐요.':'두 접시를 각각 플라스틱 접시와 털가죽 위에 올린 뒤 이어 봐요.');
-     else if(L.flashes)set('네온전구를 이었지만 불이 켜지지 않았어요 · 두 접시 테두리에 더 흐를 전자가 없어요','전자가 한 번 건너가고 나면 더 흐르지 않아 한 번만 깜박여요. 불을 계속 켜 두려면 무엇이 필요할까요? ‘03 회로 속 전자’에서 전지를 이어 봐요.');
-     else set('네온전구를 이었지만 불이 켜지지 않았어요 · 접시에 전하가 몰려 있지 않아요','플라스틱 접시를 문지르고 두 접시를 받침 위에 올린 뒤 이어요.')}
+   if(type==='flash'){const {n,donor,acc,back}=d,seated=D=>D.seat==='plastic'||D.seat==='fur';
+     if(!back){done[2]=1;set(`네온전구에 순간 불이 켜졌다가 꺼졌어요 · ${nm(donor)}의 전자 ${n}개가 네온전구를 지나 ${nm(acc)}로 이동했어요 · 접시 A ${fmtQ(c.A)}, 접시 B ${fmtQ(c.B)}`,'전자가 나오는 쪽 전극 둘레가 빛나요. 전류의 방향(주황)은 전자의 이동 방향(파랑)과 반대예요. 전자가 다 건너가면 불이 꺼져요.')}
+     else set(`네온전구가 한 번 더 깜박였어요 · 이번에는 ${nm(donor)}의 전자 ${n}개가 ${nm(acc)}로 되돌아가 반대쪽 전극이 빛났어요 · 접시 A ${fmtQ(c.A)}, 접시 B ${fmtQ(c.B)}`,seated(donor)||seated(acc)?'앞에서 건너간 전자가 되돌아갔어요. 문질러 생긴 전하로 새로 켜지는 것은 처음 한 번뿐이라, 이제 접시를 바꿔 놓거나 다시 올려도 켜지지 않아요.':'접시를 들어 올리면 아래 접시와 털가죽의 영향이 사라져, 앞에서 건너간 전자가 되돌아가요.')}
+   if(type==='neon-none'){const m=Math.abs(d.m),no='네온전구를 이었지만 불이 켜지지 않았어요 · ';
+     if(L.spent)set(no+(m?`건너갈 전자가 ${m}개뿐이에요`:'두 접시 테두리에 더 흐를 전자가 없어요'),Math.abs(d.raw)>m?SPENT:'전자가 한 번 건너가고 나면 더 흐르지 않아 한 번만 깜박여요. 불을 계속 켜 두려면 무엇이 필요할까요? ‘03 회로 속 전자’에서 전지를 이어 봐요.');
+     else if(m)set(no+`건너갈 전자가 ${m}개뿐이에요`,q<3?'여러 번 문질러 전하를 더 모은 뒤 다시 해 봐요.':'두 접시를 각각 플라스틱 접시와 털가죽 위에 올린 뒤 이어 봐요.');
+     else set(no+'접시에 전하가 몰려 있지 않아요','플라스틱 접시를 문지르고 두 접시를 받침 위에 올린 뒤 이어요.')}
    if(type==='neon-miss'){if(L.dishes.some(D=>D.seat==='shelf'))set('준비대 위에서는 네온전구를 이을 수 없어요','두 접시를 플라스틱 접시와 털가죽 위에 올린 뒤 이어요.');else set('네온전구의 두 다리가 두 접시 테두리에 모두 닿지 않았어요','두 접시 사이 위쪽으로 네온전구를 끌어 두 다리 끝을 테두리에 대요. 가까이 가면 저절로 붙어요.')}
    if(lab)syncD()}});
  labs.dish=lab;wirePause(sec,lab);
@@ -1825,15 +1861,15 @@ const tg=(key,label,on,sw)=>`<label class="tg"><input type="checkbox" data-v="${
     <button class="btn wide" data-flip style="margin-top:8px">${I.flip}전지 방향 바꾸기</button>
     <p class="help">장면의 전지나 스위치를 직접 눌러도 돼요.</p></section>
    <section class="pg"><h3 class="pg-title">보기</h3><div class="toggles">${tg('showE','전자 이동 방향',true,'var(--neg)')}${tg('showI','전류의 방향',true,'var(--cur)')}${tg('showLens','확대 렌즈',true)}${tg('showGates','지나간 전자 수',true)}</div>
-    <p class="help">렌즈의 초록 고리를 끌면 도선의 다른 곳을 확대해 볼 수 있어요.</p></section>
+    <p class="help">왼쪽 렌즈는 도선, 오른쪽 렌즈는 전구의 필라멘트를 같은 배율로 확대해요. 초록 고리를 끌면 도선의 다른 곳을 볼 수 있어요.</p></section>
    <section class="pg"><h3 class="pg-title">관찰 순서</h3>
-    <ol class="steps" data-steps><li><b>1</b>스위치가 열린 채 렌즈 속 전자의 움직임을 봐요.</li><li><b>2</b>스위치를 닫고 전자의 움직임을 다시 봐요.</li><li><b>3</b>파란 화살표와 주황 화살표의 방향을 비교해요.</li><li><b>4</b>전지 방향을 바꾸거나 2개로 늘려 봐요.</li></ol></section>
+    <ol class="steps" data-steps><li><b>1</b>스위치가 열린 채 렌즈 속 전자의 움직임을 봐요.</li><li><b>2</b>스위치를 닫고 전자의 움직임을 다시 봐요.</li><li><b>3</b>파란 화살표와 주황 화살표의 방향을 비교해요.</li><li><b>4</b>전지 방향을 바꾸거나 2개로 늘려 봐요.</li><li><b>5</b>두 렌즈에서 도선과 필라멘트의 굵기와 전자가 부딪히는 정도를 비교해요.</li></ol></section>
   </div>
   <div class="panel-foot"><div class="foot-row"><button class="btn primary" data-switch style="min-width:0"><span data-swlbl>스위치 닫기</span><kbd>S</kbd></button><button class="btn ghost" data-reset aria-label="처음으로">${I.reset}처음으로</button></div></div>`);
- const done=[0,0,0,0];let closedAt=0;
+ const done=[0,0,0,0,0];let closedAt=0;
  let lab=null;lab=new CircuitLab($('[data-stage]',sec),{onEvent:(type,L)=>{
    if(type==='reset'){done.fill(0)}
-   if(type==='closed'){done[0]=1;done[1]=1;closedAt=performance.now();setTimeout(()=>{if(L.conducting()){done[2]=1;syncC()}},4000)}
+   if(type==='closed'){done[0]=1;done[1]=1;closedAt=performance.now();setTimeout(()=>{if(L.conducting()){done[2]=1;if(L.s.showLens)done[4]=1;syncC()}},4000)}
    if((type==='flip'||type==='cells')&&done[1])done[3]=1;
    if(type==='closed'||type==='opened'||type==='flip'||type==='cells'||type==='reset')syncC()}});
  labs.circuit=lab;wirePause(sec,lab);
@@ -2127,7 +2163,7 @@ function theoryHTML(){return `
  <details class="th-more" id="th-help"><summary>사용법과 단축키</summary>
   <p>01 네온전구 · 풍선을 털가죽 위에서 좌우로 끌어 문지르고, 알루미늄 컵에 댄 뒤 네온전구를 컵에 대요. 조작판의 1·2·3 버튼도 같은 일을 해요.</p>
   <p>02 접시 전구 · 털가죽을 끌어 뒤집어 놓은 플라스틱 접시 위에서 좌우로 문지르고, 두 알루미늄 접시를 빨대로 잡아 플라스틱 접시와 털가죽 위에 올린 뒤 네온전구의 두 다리를 두 테두리에 대요. 네온전구는 다리 끝이 테두리에 가까이 가면 저절로 붙어요. 조작판의 1~3 버튼도 같은 일을 해요.</p>
-  <p>03 회로 속 전자 · 스위치(S)를 닫고 여는 동안 도선과 확대 렌즈 속 전자를 보고, 전지 방향과 개수를 바꿔 봐요. 초록 고리를 끌면 렌즈가 보는 곳이 바뀌어요.</p>
+  <p>03 회로 속 전자 · 스위치(S)를 닫고 여는 동안 도선과 확대 렌즈 속 전자를 보고, 전지 방향과 개수를 바꿔 봐요. 초록 고리를 끌면 렌즈가 보는 곳이 바뀌어요. 오른쪽 렌즈는 전구의 필라멘트를 확대해 도선과 저항을 비교해요.</p>
   <p>04 물 흐름 모형 · 펌프·밸브를 켜고 끄며 높이차와 물레방아를 보고, ‘회로와 비교’를 눌러 나란히 나타난 전기 회로와 역할이 비슷한 것끼리 카드로 짝을 맞춰요(끌어 놓거나 카드를 누른 뒤 칸을 눌러요).</p>
   <p>장면 아래 −·+·전체 단추로 장면을 확대해 볼 수 있어요. 확대한 뒤에는 빈 곳을 끌어 옮겨요.</p>
   <p class="keys"><kbd>F</kbd>전체화면 <kbd>D</kbd>테마 <kbd>H</kbd>이론·도움말 <kbd>R</kbd>리포트 <kbd>C</kbd>결과 저장 <kbd>S</kbd>스위치 <kbd>V</kbd>회로와 비교(물 흐름 모형) <kbd>Esc</kbd>닫기</p>
@@ -2140,9 +2176,10 @@ function theoryHTML(){return `
   <div class="dacts" style="justify-content:flex-start"><button class="btn" data-switchstudent>학생 바꾸기</button><button class="btn ghost" data-clearall>모든 데이터 초기화</button></div></details>
  <details class="th-more"><summary>모형의 범위 · 꼭 알아두기</summary>
 <p>점(기호) 1개는 실제로는 아주 많은 전하를 한데 모아 나타낸 거예요. 전하 수치는 실제 전자 수나 C 단위 측정값이 아니에요. 컵 위 입자들은 금속을 투영한 도해이며 빈 컵 안에서 입자가 떠다닌다는 뜻은 아니에요. 대전 후 순전하는 도체 표면에 분포해요. 비접촉 정전기 유도와 습도에 따른 누설은 계산하지 않아요. 금속의 붉은 +는 양이온 격자, 부도체의 붉은 +는 물질의 양전하 중심을 단순화했어요. 고정 궤도·입자 크기는 실제 원자 구조가 아니에요.</p>
-<p>네온전구는 충분한 전위차가 있어야 방전해요. 방전 후 잔류 전하가 남아도 꺼질 수 있어요. 여기서는 이 경향을 점의 개수로 단순화하며, 실제 점화·소호 전압이나 밝기를 계산하지 않아요. 컵과 인체·주변 사이의 전하 재분배를 요약한 모형이에요. 전자는 금속에서, 전자와 이온은 방전 기체에서, 이온은 인체에서 전류를 운반해요. 파란 입자가 몸속을 그대로 통과한다는 뜻이 아니에요.</p>
-<p>02 접시 전구 · 접시를 올리면 접시 전체 전하는 0인 채 자유 전자만 위·아래로 몰리는 정전기 유도로 나타냈어요. 이은 순간 건너가는 전자 수는 두 테두리의 전자 차이의 절반이고, 전자 3개(점 3개) 이상일 때만 깜박이도록 점화 전압을 단순화했어요. 실제로는 접시와 플라스틱 접시가 맞닿은 곳에서 전하가 조금 옮겨 가기도 하고 공기 중으로 새어 나가기도 하지만, 이 모형은 계산하지 않아요.</p>
-<p>물 흐름 모형의 cm는 가상 눈금이에요. 물의 높이차와 전압은 대응 관계이며 같은 물리량은 아니에요. 펌프를 끈 뒤 남는 흐름은 저장된 중력 위치 에너지 때문이며, 실제 전지를 제거한 회로의 과도 현상을 그대로 재현하지 않아요. 회로는 정상 직류 상태와 정성적 밝기만 다뤄요.</p></details>
+<p>네온전구는 충분한 전위차가 있어야 방전해요. 실제로는 방전 뒤 전하가 조금 남은 채 꺼지기도 하지만, 이 모형에서는 컵의 전하가 0이 될 때까지 전자가 손으로 빠져나가요. 여기서는 이 경향을 점의 개수로 단순화하며, 실제 점화·소호 전압이나 밝기를 계산하지 않아요. 컵과 인체·주변 사이의 전하 재분배를 요약한 모형이에요. 전자는 금속에서, 전자와 이온은 방전 기체에서, 이온은 인체에서 전류를 운반해요. 파란 입자가 몸속을 그대로 통과한다는 뜻이 아니에요.</p>
+<p>02 접시 전구 · 접시를 올리면 접시 전체 전하는 0인 채 자유 전자만 위·아래로 몰리는 정전기 유도로 나타냈어요. 이은 순간 건너가는 전자 수는 두 테두리의 전자 차이의 절반이고, 전자 3개(점 3개) 이상일 때만 깜박이도록 점화 전압을 단순화했어요. 문질러 생긴 전하로 새로 켜지는 것은 처음 한 번뿐이고, 그 뒤에는 접시를 바꿔 놓거나 다시 올려도 앞에서 건너간 전자가 되돌아가는 만큼만 흘러요(전기 쟁반처럼 접시를 옮기는 데 든 일만큼 다시 켜질 수도 있지만, 이 모형은 다루지 않아요). 실제로는 접시와 플라스틱 접시가 맞닿은 곳에서 전하가 조금 옮겨 가기도 하고 공기 중으로 새어 나가기도 하지만, 이 모형은 계산하지 않아요.</p>
+<p>물 흐름 모형의 cm는 가상 눈금이에요. 물의 높이차와 전압은 대응 관계이며 같은 물리량은 아니에요. 펌프를 끈 뒤 남는 흐름은 저장된 중력 위치 에너지 때문이며, 실제 전지를 제거한 회로의 과도 현상을 그대로 재현하지 않아요. 회로는 정상 직류 상태와 정성적 밝기만 다뤄요.</p>
+<p>03 확대 렌즈 · 도선과 필라멘트를 같은 배율로 그렸지만, 실제 필라멘트는 머리카락보다 훨씬 가늘고 길게 감겨 있어요. 저항이 큰 까닭은 전자가 원자와 자주 부딪히는 모습으로 단순화했고, 실제 저항값이나 온도는 계산하지 않아요.</p></details>
  <details class="th-more"><summary>출처와 제작</summary><p>첨부된 기존 가상실험을 바탕으로 SVG와 설명을 개선했어요. 기구 그림은 3D 렌더링 이미지를 WebP로 줄여 내장했어요(도움말의 ‘실험기구 그림 보기’에서 하나씩 볼 수 있어요). 손은 엄지·검지의 맞섬과 집기 자세를 참고했어요. SVG 저장 파일에도 기구 그림이 포함돼요. 참고 사진을 복제하거나 내장하지 않았어요.</p><ul><li><a href="https://sciencej1.cafe24.com/sci2/triboelectricity.html" target="_blank" rel="noopener noreferrer">과학J · 마찰 전기로 네온전구 불 켜기(02 접시 전구의 실험 흐름 참고)</a></li><li><a href="https://www.assh.org/handcare/anatomy/joints" target="_blank" rel="noopener noreferrer">ASSH · 손의 관절 구조</a></li><li><a href="https://www.nickgolinvauxmd.com/learn/how-to-thumb-pinch" target="_blank" rel="noopener noreferrer">Nick Golinvaux · 엄지·검지 집기 자세 사진과 도해</a></li><li><a href="https://openstax.org/books/university-physics-volume-2/pages/9-1-electrical-current" target="_blank" rel="noopener noreferrer">OpenStax · 전류와 전하 운반자</a></li><li><a href="https://www.bmb.colostate.edu/wp-content/uploads/sites/6/2017/03/Static-Flash.pdf" target="_blank" rel="noopener noreferrer">Colorado State University · Static Flash</a></li></ul><p>자료 확인: 2026-09-24.</p>
   <p>🧪 송쌤과학 (Song Ssaem Science)<br>ⓒ 2026 송세호 | 아주중학교<br>📺 YouTube: <a href="https://www.youtube.com/@songsamscience" target="_blank" rel="noopener noreferrer" aria-label="송쌤과학 유튜브 채널 (새 창)">@songsamscience</a> 📷 Instagram: <a href="https://www.instagram.com/songsamscience/" target="_blank" rel="noopener noreferrer" aria-label="송쌤과학 인스타그램 (새 창)">@songsamscience</a><br>⚠ 무단 복제·상업적 이용 금지</p>
   <p><strong>v${APP_VERSION} · ${APP_DATE}</strong></p></details>`}
