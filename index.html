@@ -490,7 +490,7 @@ svg.scene[data-narrow] text{font-size:calc(var(--k,1) * 9px)}svg.scene[data-narr
 }
 @media(max-width:860px){.lab.cmp .stage{display:flex;flex-direction:column;aspect-ratio:auto;min-height:0}.lab.cmp .stage>svg.scene{height:auto;aspect-ratio:800/450}.twin{flex:none;aspect-ratio:800/450;border-left:0;border-top:1px solid var(--line-1)}}
 @media(max-width:600px){.mb-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:repeat(7,auto);grid-auto-flow:column;gap:6px 24px}.mb-slot::before{content:'⇄';left:-18px;top:50%;transform:translateY(-50%)}.mb-rl{min-height:30px}.mb-tray{flex-wrap:wrap}.mb-tl{width:100%;text-align:left}.mb-cards{width:100%}.mb-card{flex:1 1 0;min-width:56px;min-height:42px}}
-@media(max-width:380px){.bench-head .tools{gap:3px}.bench-head .tool{width:40px}.topbar{padding:0 2px 0 6px}.top-title h1{font-size:13px}.channel{width:36px}.ibtn{width:36px}.legend{gap:2px 8px}}
+@media(max-width:380px){.bench-head .tools{gap:3px}.bench-head .tool{width:40px}.topbar{padding:0 4px 0 6px}.top-title h1{font-size:13px}.channel{width:36px}.ibtn{width:36px}.legend{gap:2px 8px}}
 
 </style>
 </head>
@@ -542,6 +542,8 @@ function place(g,x,y,deg=0){g.setAttribute('transform',`translate(${x.toFixed(1)
 function svgPoint(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse())}
 function dragify(node,svg,{start,move,end}){
   // start가 노드를 맨 앞으로 다시 붙이면(appendChild) 포인터 캡처가 풀리므로, 캡처는 start 뒤에 건다
+  // 터치: 크로뮴은 SVG 안쪽 요소의 touch-action:none을 따르지 않아, 세로로 끌면 화면 스크롤이 끼어들어 끌기가 끊긴다(pointercancel) — 끄는 물체에서만 기본 동작을 막는다
+  node.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
   node.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();node.focus({preventScroll:true});
     start&&start(svgPoint(svg,e));try{node.setPointerCapture(e.pointerId)}catch(_){}
     const mv=ev=>move(svgPoint(svg,ev)),up=()=>{node.removeEventListener('pointermove',mv);node.removeEventListener('pointerup',up);node.removeEventListener('pointercancel',up);end&&end()};
@@ -802,7 +804,7 @@ class CircuitLab{
     if(cond&&s.cells===2)ex+=' 같은 방향으로 직렬 연결한 전지 2개가 더 큰 전압을 만들어요. 이 모형에서는 더 큰 전류와 밝기를 보여 줘요.';
     else if(cond&&s.showLens&&!this.o.compact)ex+=' 두 렌즈를 비교해 봐요. 필라멘트는 도선보다 가늘고 원자핵이 촘촘해, 움직이는 전자가 원자와 더 자주 부딪혀요(저항이 커요). 이때 열이 나서 필라멘트가 빛을 내요.';
     return{obs,ex,cond:`전지 ${s.cells}개(${V} V) · (+)극이 ${s.reversed?'아래':'위'} · 스위치 ${s.closed?'닫힘':'열림'}`,
-      state:`전류 ${cond?'흐름':'흐르지 않음'} · 전구 ${cond?'켜짐':'꺼짐'} · 전자: (−)극 → (+)극 쪽 · 외부 회로 전류: (+)극 → (−)극 쪽${s.showGates&&!this.o.compact?` · 지나간 전자 A ${this.count.A}개, B ${this.count.B}개`:''}`};
+      state:`전류 ${cond?'흐름':'흐르지 않음'} · 전구 ${cond?'켜짐':'꺼짐'}${cond?' · 전자: (−)극 → (+)극 쪽 · 외부 회로 전류: (+)극 → (−)극 쪽':''}${s.showGates&&!this.o.compact?` · 지나간 전자 A ${this.count.A}개, B ${this.count.B}개`:''}`};
   }
 }
 
